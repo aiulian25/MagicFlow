@@ -1,0 +1,27 @@
+# Public / portable compose. Pulls the pre-built image from Docker Hub — no local
+# build needed — and keeps all runtime data in named volumes (no host-specific
+# paths, no source mount). For local development (live ./app reload + a local
+# build + custom host data dirs) use docker-compose.dev.yml instead (git-ignored).
+services:
+  magicflow:
+    image: aiulian25/magicflow:latest
+    pull_policy: always
+    container_name: magicflow
+    ports:
+      - "3876:3876"
+    volumes:
+      - magicflow-input:/data/input
+      - magicflow-output:/data/output
+      - magicflow-tmp:/data/tmp
+      - magicflow-config:/data/config
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  magicflow-input:
+  magicflow-output:
+  magicflow-tmp:
+  magicflow-config:

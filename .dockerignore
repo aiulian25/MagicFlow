@@ -1,0 +1,15 @@
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.git
+.gitignore
+backup/
+build.log
+docker-compose*.yml
+PLAN.md
+MF.txt
+stitch_glassy_image_converter/
+*.md
+.env
+.env.*

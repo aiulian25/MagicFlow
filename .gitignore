@@ -1,0 +1,35 @@
+# ── Personal / local dev config ───────────────────────────────
+# Host-specific bind mounts + absolute paths — never publish.
+docker-compose.dev.yml
+
+# ── Working & planning artifacts ──────────────────────────────
+backup/
+build.log
+
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ── Runtime data (bind/volume mounts) ─────────────────────────
+/data/
+data/
+
+# ── Secrets / environment ─────────────────────────────────────
+.env
+.env.*
+*.key
+*.pem
+*.p12
+
+# ── Node (only present transiently when compiling Tailwind) ────
+node_modules/
+
+# ── Editor / OS cruft ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# ── Claude Code local settings ────────────────────────────────
+.claude/settings.local.json
