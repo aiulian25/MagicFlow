@@ -1506,7 +1506,7 @@ async def thumb(filename: str):
 
 
 @app.get("/download/{filename}")
-async def download(filename: str, delete: bool = False):
+async def download(filename: str, delete: bool = False, inline: bool = False):
     safe = sanitize_filename(filename)
     if safe != filename:
         raise HTTPException(status_code=400, detail="Invalid filename.")
@@ -1527,4 +1527,10 @@ async def download(filename: str, delete: bool = False):
             headers={"Content-Disposition": f'attachment; filename="{safe}"'},
         )
 
-    return FileResponse(str(path), media_type=media_type, filename=safe)
+    # inline=1 serves the file for in-browser preview (the full-size viewer) so a
+    # PDF renders in an <iframe> instead of triggering a download. Only known
+    # media types from OUTPUT_MEDIA_TYPES are served (no HTML/SVG), so inline
+    # rendering can't execute injected markup.
+    disposition = "inline" if inline else "attachment"
+    return FileResponse(str(path), media_type=media_type, filename=safe,
+                        content_disposition_type=disposition)

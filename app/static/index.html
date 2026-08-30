@@ -1285,6 +1285,23 @@
     </div>
 </div>
 
+<!-- ══ Full-size file preview (lightbox) ══════════════════════════════ -->
+<div id="lightbox" class="fixed inset-0 z-[95] items-center justify-center" style="display:none"
+     role="dialog" aria-modal="true" aria-label="File preview">
+    <div id="lightbox-backdrop" class="absolute inset-0 bg-black/90 backdrop-blur-sm"></div>
+    <div class="relative w-full h-full flex flex-col p-md md:p-lg">
+        <div class="flex items-center justify-between gap-md shrink-0 mb-md z-10">
+            <p id="lightbox-name" class="font-body-md text-body-md text-on-surface truncate min-w-0"></p>
+            <button id="lightbox-close" aria-label="Close preview" title="Close (Esc)"
+                class="p-sm rounded-full glass-card text-on-surface hover:text-primary transition-colors shrink-0">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <!-- Stage: media is injected here and fills the viewport (object-contain) -->
+        <div id="lightbox-stage" class="relative flex-1 min-h-0 flex items-center justify-center"></div>
+    </div>
+</div>
+
 <script>
 // ════════════════════════════════════════════════
 // STATE
@@ -2282,6 +2299,7 @@ document.addEventListener('keydown', e => {
     if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA' ||
               t.tagName === 'BUTTON' || t.tagName === 'A' || t.isContentEditable)) return;
     if (reconvertModal && reconvertModal.style.display === 'flex') return;  // modal owns Enter
+    if (isLightboxOpen()) return;  // preview open — Enter shouldn't start a job
     if (state.converting) return;
     if (state.mode === 'combine' && state.files.length > 0)      { e.preventDefault(); startConversion(); }
     else if (state.mode === 'extract' && state.extractFile)      { e.preventDefault(); startExtract(); }
@@ -3140,13 +3158,18 @@ function renderSavedFiles(files) {
         const editable = EXPLODE_EXTS.has('.' + f.filename.split('.').pop().toLowerCase());
         html += `
 <div class="glass-card rounded-xl overflow-hidden flex flex-col group transition-all hover:-translate-y-1">
-  <div class="aspect-video relative overflow-hidden bg-surface-container-low">
+  <div class="aspect-video relative overflow-hidden bg-surface-container-low cursor-pointer"
+       data-preview="${name}" role="button" tabindex="0" aria-label="View ${name} full size" title="Click to view full size">
     <!-- Server-rendered thumbnail (first frame/page as JPEG); onerror → icon fallback -->
     <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
          src="/thumb/${encodeURIComponent(f.filename)}" alt="${name}" loading="lazy"
          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
     <div class="w-full h-full items-center justify-center" style="display:none">
       <span class="material-symbols-outlined text-primary text-[48px] opacity-20">${/\.(mp4|webm)$/i.test(f.filename) ? 'movie' : (isPdf ? 'picture_as_pdf' : 'image')}</span>
+    </div>
+    <!-- Full-size hint on hover -->
+    <div class="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors pointer-events-none">
+      <span class="material-symbols-outlined text-white text-[36px] opacity-0 group-hover:opacity-90 transition-opacity drop-shadow-lg">zoom_out_map</span>
     </div>
     <label class="absolute top-sm left-sm z-10 flex items-center justify-center p-xs rounded bg-surface-container-lowest/70 backdrop-blur-md border border-outline-variant/20 cursor-pointer"
            title="Select for bulk actions">
@@ -3236,13 +3259,18 @@ function renderRecentConversions(files) {
         const editable = EXPLODE_EXTS.has('.' + f.filename.split('.').pop().toLowerCase());
         html += `
 <div class="glass-card rounded-xl overflow-hidden flex flex-col group transition-all hover:-translate-y-1">
-  <div class="aspect-video relative overflow-hidden bg-surface-container-low">
+  <div class="aspect-video relative overflow-hidden bg-surface-container-low cursor-pointer"
+       data-preview="${name}" role="button" tabindex="0" aria-label="View ${name} full size" title="Click to view full size">
     <!-- Server-rendered thumbnail (first frame/page as JPEG); onerror → icon fallback -->
     <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
          src="/thumb/${encodeURIComponent(f.filename)}" alt="${name}" loading="lazy"
          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
     <div class="w-full h-full items-center justify-center" style="display:none">
       <span class="material-symbols-outlined text-primary text-[48px] opacity-20">${/\.(mp4|webm)$/i.test(f.filename) ? 'movie' : (isPdf ? 'picture_as_pdf' : 'image')}</span>
+    </div>
+    <!-- Full-size hint on hover -->
+    <div class="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors pointer-events-none">
+      <span class="material-symbols-outlined text-white text-[36px] opacity-0 group-hover:opacity-90 transition-opacity drop-shadow-lg">zoom_out_map</span>
     </div>
     <div class="absolute top-sm right-sm px-sm py-xs rounded bg-tertiary/20 backdrop-blur-md
                 border border-tertiary/30 flex items-center gap-xs">
@@ -3285,6 +3313,8 @@ function renderRecentConversions(files) {
 }
 
 document.getElementById('recent-grid').addEventListener('click', async e => {
+    const pv = e.target.closest('[data-preview]');
+    if (pv && !e.target.closest('label, input, button, a')) { openLightbox(pv.dataset.preview); return; }
     const rc = e.target.closest('[data-reconvert]');
     if (rc) { openReconvert(rc.dataset.reconvert); return; }
     const ed = e.target.closest('[data-edit-file]');
@@ -3326,6 +3356,8 @@ document.getElementById('search-input').addEventListener('input', e => {
 
 // Event delegation for delete buttons in saved files
 document.getElementById('saved-files-grid').addEventListener('click', async e => {
+    const pv = e.target.closest('[data-preview]');
+    if (pv && !e.target.closest('label, input, button, a')) { openLightbox(pv.dataset.preview); return; }
     const rc = e.target.closest('[data-reconvert]');
     if (rc) { openReconvert(rc.dataset.reconvert); return; }
     const ed = e.target.closest('[data-edit-file]');
@@ -3566,6 +3598,99 @@ document.getElementById('reconvert-backdrop').addEventListener('click', closeRec
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && reconvertModal.style.display === 'flex') closeReconvert();
 });
+
+// ════════════════════════════════════════════════
+// FULL-SIZE FILE PREVIEW (LIGHTBOX)
+// Click a saved/recent card thumbnail to view the real output at full browser
+// size. Images/animations use <img>, video uses <video>, PDF an <iframe>;
+// formats the browser can't decode (tiff/tga/heic) fall back to the server
+// thumbnail, then a "download to view" message.
+// ════════════════════════════════════════════════
+const lightboxEl = document.getElementById('lightbox');
+
+function isLightboxOpen() {
+    return lightboxEl.style.display === 'flex';
+}
+
+function lightboxUnavailableHtml(filename) {
+    const url  = '/download/' + encodeURIComponent(filename);
+    const name = escapeHtml(filename);
+    return `<div class="flex flex-col items-center text-center gap-md text-on-surface-variant">
+        <span class="material-symbols-outlined text-[64px] opacity-40">visibility_off</span>
+        <p class="font-body-lg text-body-lg text-on-surface">Preview not available for this format</p>
+        <a href="${url}" download="${name}"
+           class="px-lg py-md rounded-lg bg-tertiary text-on-tertiary font-bold flex items-center gap-sm hover:brightness-110 transition-all">
+           <span class="material-symbols-outlined text-[18px]">download</span> Download to view
+        </a>
+    </div>`;
+}
+
+function openLightbox(filename) {
+    if (!filename) return;
+    const stage = document.getElementById('lightbox-stage');
+    document.getElementById('lightbox-name').textContent = filename;
+    // ?inline=1 lets the browser render (not download) the file — required for PDF.
+    const url = '/download/' + encodeURIComponent(filename) + '?inline=1';
+
+    if (/\.(mp4|webm)$/i.test(filename)) {
+        stage.innerHTML = `<video src="${url}" controls autoplay loop muted playsinline
+            class="max-w-full max-h-full rounded-lg shadow-2xl"></video>`;
+    } else if (/\.pdf$/i.test(filename)) {
+        stage.innerHTML = `<iframe src="${url}" title="${escapeHtml(filename)}"
+            class="w-full h-full rounded-lg bg-white shadow-2xl"></iframe>`;
+    } else {
+        // Attach the error handler in JS (no inline handler carrying user data).
+        stage.innerHTML = `<img alt="${escapeHtml(filename)}"
+            class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">`;
+        const img = stage.querySelector('img');
+        let triedThumb = false;
+        img.addEventListener('error', () => {
+            if (!triedThumb) {                 // undecodable original → server thumbnail
+                triedThumb = true;
+                img.src = '/thumb/' + encodeURIComponent(filename);
+            } else {                           // thumbnail failed too → graceful message
+                stage.innerHTML = lightboxUnavailableHtml(filename);
+            }
+        });
+        img.src = url;
+    }
+
+    lightboxEl.style.display = 'flex';
+    document.getElementById('lightbox-close').focus();
+}
+
+function closeLightbox() {
+    if (!isLightboxOpen()) return;
+    lightboxEl.style.display = 'none';
+    document.getElementById('lightbox-stage').innerHTML = '';  // stop video/gif playback, free memory
+}
+
+document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+// Click anywhere outside the media (scrim, empty stage, top bar) closes; clicks
+// on the media itself or the close button don't. The full-size content wrapper
+// covers the backdrop layer, so the listener lives on the overlay, not the scrim.
+lightboxEl.addEventListener('click', e => {
+    if (e.target.closest('#lightbox-close')) return;
+    const stage = document.getElementById('lightbox-stage');
+    if (e.target !== stage && stage.contains(e.target)) return;  // clicked the media
+    closeLightbox();
+});
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && isLightboxOpen()) closeLightbox();
+});
+
+// Keyboard access: Enter/Space on a focused thumbnail opens the preview.
+// stopPropagation keeps the global Enter shortcut from also firing.
+function gridPreviewKeydown(e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const pv = e.target.closest('[data-preview]');
+    if (!pv || e.target.closest('label, input, button, a')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    openLightbox(pv.dataset.preview);
+}
+document.getElementById('saved-files-grid').addEventListener('keydown', gridPreviewKeydown);
+document.getElementById('recent-grid').addEventListener('keydown', gridPreviewKeydown);
 
 document.getElementById('reconvert-submit').addEventListener('click', async () => {
     if (!reconvertTarget) return;
