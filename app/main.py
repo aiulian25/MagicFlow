@@ -653,8 +653,7 @@ async def convert(
                 frame_delays=frame_delays,
             )
             _run_or_500(cmd, job_tmp, run_env, "Conversion failed")
-            if not output_path.exists():
-                raise HTTPException(status_code=500, detail="Conversion produced no output file.")
+            _require_output(output_path, "Conversion")
 
         # Sidecar recipe for kept outputs (F14). frames = expanded output frame
         # count (effective_total), not the input-file count.
@@ -713,6 +712,17 @@ def _run_or_500(cmd: list[str], job_tmp: Path, run_env: dict, label: str):
     return r
 
 
+def _require_output(output_path, label: str) -> None:
+    """Encoders can exit 0 yet write nothing (see ANIMATED_WEBP_PROFILE_STRIP).
+    A missing or 0-byte output is deleted and reported as a 500, so it can never
+    be saved to My Files as if it had succeeded."""
+    path = Path(output_path)
+    if path.is_file() and path.stat().st_size > 0:
+        return
+    path.unlink(missing_ok=True)
+    raise HTTPException(status_code=500, detail=f"{label} produced no output file.")
+
+
 def _prep_frames(frame_paths, common_kwargs, job_tmp, run_env, label,
                  job_id=None, progress_total=0):
     """Phase 1 of the two-phase pipeline: transform each INPUT into PNG frames,
@@ -765,8 +775,7 @@ def _encode_apng(frame_paths, output_path, delay_cs, loop, common_kwargs, job_tm
         JOBS[job_id] = {"phase": "encoding", "done": progress_total, "total": progress_total}
     cmd_enc = build_apng_encode_command(prep_pattern, str(output_path), delay_cs, loop)
     _run_or_500(cmd_enc, job_tmp, run_env, "APNG encoding failed")
-    if not Path(output_path).exists():
-        raise HTTPException(status_code=500, detail="APNG encoding produced no output file.")
+    _require_output(output_path, "APNG encoding")
 
 
 def _encode_video(frame_paths, output_path, delay_cs, fmt, common_kwargs, job_tmp, run_env,
@@ -780,8 +789,7 @@ def _encode_video(frame_paths, output_path, delay_cs, fmt, common_kwargs, job_tm
         JOBS[job_id] = {"phase": "encoding", "done": progress_total, "total": progress_total}
     cmd_enc = build_video_encode_command(prep_pattern, str(output_path), delay_cs, fmt)
     _run_or_500(cmd_enc, job_tmp, run_env, f"{fmt.upper()} encoding failed")
-    if not Path(output_path).exists():
-        raise HTTPException(status_code=500, detail=f"{fmt.upper()} encoding produced no output file.")
+    _require_output(output_path, f"{fmt.upper()} encoding")
 
 
 def _extract_frames(source: Path, job_tmp: Path, run_env: dict, prefix: str = "frame") -> list[str]:
@@ -1167,8 +1175,7 @@ async def convert_image(
         if result.returncode != 0:
             detail = result.stderr.strip() or result.stdout.strip() or "Unknown ImageMagick error."
             raise HTTPException(status_code=500, detail=f"Conversion failed: {detail}")
-        if not output_path.exists():
-            raise HTTPException(status_code=500, detail="Conversion produced no output file.")
+        _require_output(output_path, "Conversion")
 
         # Sidecar recipe for kept stills (F14).
         if keep_output:
@@ -1384,8 +1391,7 @@ async def reconvert(
             else:
                 cmd = build_command(frames=frame_paths, output=str(output_path), **common)
                 _run_or_500(cmd, job_tmp, run_env, "Re-conversion failed")
-                if not output_path.exists():
-                    raise HTTPException(status_code=500, detail="Re-conversion produced no output file.")
+                _require_output(output_path, "Re-conversion")
         except HTTPException:
             output_path.unlink(missing_ok=True)  # remove any partial output
             raise

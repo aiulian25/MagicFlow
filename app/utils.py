@@ -53,6 +53,14 @@ OUTPUT_MEDIA_TYPES: dict[str, str] = {
 
 OUTPUT_EXTENSIONS: set[str] = set(OUTPUT_MEDIA_TYPES.keys())
 
+# ImageMagick 6.9.11's animated-WebP writer silently emits a 0-byte file (and
+# still exits 0) when the FIRST frame carries an ICC or XMP profile — e.g. any
+# GIMP/camera JPEG. Dropping every profile before the write avoids it.
+# ponytail: strips instead of colour-managing, so a wide-gamut (non-sRGB) source
+# renders as sRGB — as the APNG/MP4/WebM outputs already do. Upgrade path:
+# convert to sRGB in the frame-prep phase for every animated format.
+ANIMATED_WEBP_PROFILE_STRIP: list[str] = ["+profile", "*"]
+
 # ── Single still → still conversion ──────────────────────────────────────────
 # Output formats for the image converter. All verified read/write in the
 # container's ImageMagick build (libheif gives AVIF/HEIC, libwebp gives WebP).
@@ -241,6 +249,9 @@ def build_assembly_command(
         if optimize_layers:
             cmd += ["-layers", "optimize"]
 
+    if fmt == "webp":
+        cmd += ANIMATED_WEBP_PROFILE_STRIP
+
     cmd += ["-quality", str(quality)]
     cmd.append(output)
     return cmd
@@ -388,6 +399,8 @@ def build_command(
     # ── Strip metadata ────────────────────────
     if strip:
         cmd.append("-strip")
+    if animated and fmt == "webp":
+        cmd += ANIMATED_WEBP_PROFILE_STRIP
 
     # ── Output ────────────────────────────────
     if frames_pattern is not None:
