@@ -124,6 +124,9 @@ This pulls `aiulian25/magicflow:latest` from Docker Hub and starts the app. Open
 That's it — no build, no clone required. Data persists in four named Docker volumes
 (`magicflow-input`, `magicflow-output`, `magicflow-tmp`, `magicflow-config`).
 
+> **Linux `amd64` only.** The published image is built and verified for `amd64`; there is no
+> `arm64` image, so Apple Silicon and Raspberry Pi are not supported targets.
+
 The default port mapping is `127.0.0.1:3876:3876`, so MagicFlow listens **only on this
 machine**. See [Hosting on a LAN](#hosting-on-a-lan) to reach it from other devices.
 
@@ -137,8 +140,9 @@ docker buildx imagetools inspect aiulian25/magicflow:latest
 docker compose config
 ```
 
-Only Linux **amd64** source builds are verified by the current locks/tests. Do not infer
-ARM support from the base-image manifest; verify the complete application first.
+Only Linux **amd64** is built, locked and verified — the published image is a single-arch
+`amd64` manifest by design. Do not infer ARM support from the base-image manifest: the base
+is multi-arch, the release is not.
 
 ### Backup, upgrade and rollback
 
