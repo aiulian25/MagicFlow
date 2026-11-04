@@ -1,0 +1,9 @@
+<!-- App-owned IM6 policy fragment, appended after Debian's resource/path policy.
+     Keep approved raster/PDF coders and the small internal pixel/profile set.
+     Deny scripting/vector/URL coders even when disguised by a safe extension. -->
+<policy domain="coder" rights="none" pattern="*"/>
+<policy domain="coder" rights="read|write" pattern="{PNG,PNG8,PNG24,PNG32,PNG48,PNG64,JPEG,JPG,GIF,WEBP,TIFF,TIFF64,BMP,BMP2,BMP3,ICO,TGA,HEIC,AVIF,PDF,PSD,DNG,CR2,CR3,NEF,ARW,RAF,ORF,RW2,PEF,SRW,MRW,RAW,RGB,RGBA,CMYK,CMYKA,GRAY,GRAYA,PNM,PAM,PBM,PGM,PPM,XC,CANVAS,GRADIENT,NULL,INFO,ICC,ICM}"/>
+<policy domain="delegate" rights="none" pattern="*"/>
+<policy domain="delegate" rights="execute" pattern="{gs,ps:alpha,ps:color,ps:mono,ps:cmyk,dng:decode}"/>
+<policy domain="filter" rights="none" pattern="*"/>
+<policy domain="path" rights="none" pattern="@*"/>

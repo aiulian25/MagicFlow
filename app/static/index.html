@@ -9,6 +9,9 @@
 <link rel="stylesheet" href="/static/vendor/tailwind.css"/>
 <link rel="stylesheet" href="/static/vendor/fonts.css"/>
 <style>
+    #preview-wrap { background-image: conic-gradient(#263244 25%, #121c2d 0 50%, #263244 0 75%, #121c2d 0); background-size: 20px 20px; }
+    /* Semantic visibility must win over utilities and inline layout styles. */
+    [hidden] { display: none !important; }
     body { background-color: #020617; color: #dae2fd; }
     .glass-card {
         background: rgba(30,41,59,0.5);
@@ -98,6 +101,50 @@
     #_safelist {
         display: none;
     }
+    :focus-visible { outline: 2px solid #4cd7f6 !important; outline-offset: 3px; }
+    /* Keep the desktop shell; narrow windows use ordinary top navigation. */
+    .material-symbols-outlined { flex-shrink: 0; width: 1em; overflow: hidden; }
+    @media (max-width: 1023px) {
+        body[class] { overflow-x: visible; }
+        body > aside[class] { position: static; width: auto; height: auto; padding: 12px 16px; }
+        body > aside > div:first-child { margin-bottom: 8px; }
+        body > aside > div:first-child p { display: none; }
+        body > aside nav { display: flex; flex-wrap: wrap; gap: 4px; }
+        body > aside nav a { flex: 1 1 auto; padding: 8px; gap: 4px; }
+        body > aside > div:last-child { padding: 8px 0 0; }
+        body > aside .nav-active { border-right: 0; box-shadow: inset 0 -2px #4cd7f6; }
+        body > header[class] { position: static; width: auto; padding: 8px 16px; }
+        body > header > div:first-child { width: 100%; min-width: 0; }
+        body > main[class] { margin-left: 0; padding: 24px 16px 120px; }
+        main [role="group"] { display: flex; flex-wrap: wrap; width: 100%; }
+        main [data-mode] { flex: 1 1 150px; justify-content: center; padding: 8px; }
+        main input, main select, #reconvert-modal input, #reconvert-modal select { min-width: 0; max-width: 100%; }
+        main .flex, #reconvert-modal .flex { min-width: 0; }
+        main button, #reconvert-modal button { white-space: normal; overflow-wrap: anywhere; }
+        #convert-fab { left: 16px; right: 16px; }
+        #convert-fab > button { width: 100%; justify-content: center; }
+    }
+    @media (max-width: 479px) {
+        #settings-section, #convert-section, #extract-section { padding: 16px; }
+        #settings-section .grid, #convert-section .grid, #extract-section .grid,
+        #reconvert-modal .grid { grid-template-columns: minmax(0, 1fr); }
+        #download-section .flex { flex-wrap: wrap; }
+        #reconvert-modal { padding: 8px; }
+        #reconvert-modal > div.relative { padding: 16px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+    }
+
+.compare-dialog {width:min(1200px,96vw);max-height:94vh;overflow:auto;padding:20px;background:#11151c;border:1px solid #444;border-radius:16px;color:#eee}
+.compare-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.compare-slot {min-width:0}.compare-slot h3 {overflow-wrap:anywhere}.compare-slot p {font-size:12px;overflow-wrap:anywhere}
+.compare-surface {position:relative;height:clamp(180px,40vh,420px);overflow:hidden;touch-action:none;cursor:grab;border:1px solid #777;background-color:#ccc}
+.compare-surface[data-background="checker"] {background-image:linear-gradient(45deg,#888 25%,transparent 25%),linear-gradient(-45deg,#888 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#888 75%),linear-gradient(-45deg,transparent 75%,#888 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}
+.compare-surface[data-background="white"] {background:#fff}.compare-surface[data-background="black"] {background:#000}
+.compare-surface img {position:absolute;left:50%;top:50%;max-width:none;max-height:none;pointer-events:none;transform-origin:center}
+.compare-controls {display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:12px 0}.compare-controls button,.compare-controls select {padding:8px;border:1px solid #777;border-radius:6px;background:#252b35;color:#fff}
+@media(max-width:640px){.compare-grid{grid-template-columns:1fr}.compare-surface{height:200px}}
 </style>
 </head>
 <body class="overflow-x-hidden">
@@ -131,24 +178,24 @@
     <nav class="flex-1 space-y-unit">
         <a id="nav-dashboard" data-nav="dashboard" href="#"
            class="flex items-center gap-md px-md py-sm rounded-lg transition-all duration-200 ease-in-out nav-active">
-            <span class="material-symbols-outlined">dashboard</span>
+            <span aria-hidden="true" class="material-symbols-outlined">dashboard</span>
             <span class="font-body-lg text-body-lg">Dashboard</span>
         </a>
         <a id="nav-files" data-nav="files" href="#"
            class="flex items-center gap-md px-md py-sm rounded-lg transition-all duration-200 ease-in-out nav-inactive hover:bg-white/5">
-            <span class="material-symbols-outlined">folder_open</span>
+            <span aria-hidden="true" class="material-symbols-outlined">folder_open</span>
             <span class="font-body-lg text-body-lg">My Files</span>
         </a>
         <a id="nav-settings" data-nav="settings" href="#"
            class="flex items-center gap-md px-md py-sm rounded-lg transition-all duration-200 ease-in-out nav-inactive hover:bg-white/5">
-            <span class="material-symbols-outlined">settings</span>
+            <span aria-hidden="true" class="material-symbols-outlined">settings</span>
             <span class="font-body-lg text-body-lg">Settings</span>
         </a>
     </nav>
     <div class="mt-auto p-sm">
         <button id="new-conversion-btn"
             class="w-full py-md rounded-xl primary-gradient text-on-primary font-bold shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-sm">
-            <span class="material-symbols-outlined">add_circle</span>
+            <span aria-hidden="true" class="material-symbols-outlined">add_circle</span>
             New Conversion
         </button>
     </div>
@@ -158,16 +205,16 @@
 <header class="fixed top-0 right-0 left-64 h-16 border-b border-outline-variant/10 backdrop-blur-md bg-surface/80 flex justify-between items-center px-lg z-40">
     <div class="flex items-center gap-lg w-1/2">
         <div class="relative w-full max-w-md">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
-            <input id="search-input"
+            <span aria-hidden="true" class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+            <input id="search-input" aria-label="Search conversions"
                 class="w-full bg-surface-container-lowest/60 border border-outline-variant/20 rounded-full py-sm pl-10 pr-md text-on-surface focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all font-body-sm text-body-sm"
                 placeholder="Search conversions..." type="text" autocomplete="off"/>
         </div>
     </div>
     <div class="flex items-center gap-md">
-        <span id="header-converting-spinner" class="material-symbols-outlined text-secondary spin text-[20px]" style="display:none">sync</span>
+        <span aria-hidden="true" id="header-converting-spinner" class="material-symbols-outlined text-secondary spin text-[20px]" style="display:none">sync</span>
         <div class="h-8 w-8 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center">
-            <span class="material-symbols-outlined text-primary text-[18px]">auto_fix_high</span>
+            <span aria-hidden="true" class="material-symbols-outlined text-primary text-[18px]">auto_fix_high</span>
         </div>
     </div>
 </header>
@@ -181,20 +228,20 @@
 
     <!-- Mode switch: Combine vs Extract -->
     <section>
-        <div class="inline-flex p-xs rounded-xl glass-card gap-xs" role="tablist" aria-label="Conversion mode">
-            <button id="mode-combine-btn" data-mode="combine" role="tab" aria-selected="true"
+        <div class="inline-flex p-xs rounded-xl glass-card gap-xs" role="group" aria-label="Conversion mode">
+            <button id="mode-combine-btn" data-mode="combine" aria-pressed="true"
                 class="px-lg py-sm rounded-lg font-bold flex items-center gap-sm transition-all">
-                <span class="material-symbols-outlined text-[20px]">animation</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[20px]">animation</span>
                 <span class="font-label-md text-label-md">Combine to Animation</span>
             </button>
-            <button id="mode-extract-btn" data-mode="extract" role="tab" aria-selected="false"
+            <button id="mode-extract-btn" data-mode="extract" aria-pressed="false"
                 class="px-lg py-sm rounded-lg font-bold flex items-center gap-sm transition-all">
-                <span class="material-symbols-outlined text-[20px]">grid_view</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[20px]">grid_view</span>
                 <span class="font-label-md text-label-md">Extract Frames</span>
             </button>
-            <button id="mode-convert-btn" data-mode="convert" role="tab" aria-selected="false"
+            <button id="mode-convert-btn" data-mode="convert" aria-pressed="false"
                 class="px-lg py-sm rounded-lg font-bold flex items-center gap-sm transition-all">
-                <span class="material-symbols-outlined text-[20px]">swap_horiz</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[20px]">swap_horiz</span>
                 <span class="font-label-md text-label-md">Convert Image</span>
             </button>
         </div>
@@ -205,7 +252,7 @@
         <div id="drop-zone"
             class="glass-card rounded-xl border-2 border-dashed border-outline/30 p-xl flex flex-col items-center justify-center text-center transition-all duration-300 group cursor-pointer">
             <div class="w-20 h-20 rounded-full bg-secondary-container/20 flex items-center justify-center mb-lg group-hover:scale-110 transition-transform">
-                <span id="drop-icon" class="material-symbols-outlined text-secondary text-[40px]">upload_file</span>
+                <span aria-hidden="true" id="drop-icon" class="material-symbols-outlined text-secondary text-[40px]">upload_file</span>
             </div>
             <h2 id="drop-title" class="font-headline-lg text-headline-lg text-on-surface mb-sm">Drop your images here</h2>
             <p id="drop-subtitle" class="font-body-lg text-body-lg text-on-surface-variant max-w-md mx-auto">
@@ -214,19 +261,19 @@
             <div class="mt-lg flex gap-md flex-wrap justify-center">
                 <button id="select-files-btn"
                     class="px-lg py-md rounded-lg glass-card border-secondary/50 text-secondary font-bold flex items-center gap-sm hover:bg-secondary/10 transition-colors">
-                    <span class="material-symbols-outlined">attach_file</span> Select Files
+                    <span aria-hidden="true" class="material-symbols-outlined">attach_file</span> Select Files
                 </button>
                 <button id="select-folder-btn"
                     class="px-lg py-md rounded-lg glass-card border-tertiary/50 text-tertiary font-bold flex items-center gap-sm hover:bg-tertiary/10 transition-colors">
-                    <span class="material-symbols-outlined">folder</span> Select Folder
+                    <span aria-hidden="true" class="material-symbols-outlined">folder</span> Select Folder
                 </button>
             </div>
         </div>
         <!-- accept lists are pre-fetch fallbacks — overwritten from GET /config by loadConfig() -->
         <input type="file" id="file-input" multiple
-               accept=".jpg,.jpeg,.png,.apng,.webp,.gif,.bmp,.tga,.tif,.tiff,.psd,.heic,.heif,.cr2,.cr3,.nef,.arw,.dng,.raf,.orf,.rw2,.pef,.srw" class="hidden"/>
+               accept=".jpg,.jpeg,.png,.apng,.webp,.gif,.bmp,.tga,.tif,.tiff,.psd,.heic,.heif,.avif,.cr2,.cr3,.nef,.arw,.dng,.raf,.orf,.rw2,.pef,.srw" class="hidden"/>
         <input type="file" id="folder-input" webkitdirectory multiple
-               accept=".jpg,.jpeg,.png,.apng,.webp,.gif,.bmp,.tga,.tif,.tiff,.psd,.heic,.heif,.cr2,.cr3,.nef,.arw,.dng,.raf,.orf,.rw2,.pef,.srw" class="hidden"/>
+               accept=".jpg,.jpeg,.png,.apng,.webp,.gif,.bmp,.tga,.tif,.tiff,.psd,.heic,.heif,.avif,.cr2,.cr3,.nef,.arw,.dng,.raf,.orf,.rw2,.pef,.srw" class="hidden"/>
     </section>
 
     <!-- Rejected files (shown immediately when a drop is invalid) -->
@@ -234,10 +281,10 @@
         <div class="rounded-xl border border-error/30 bg-error/5 p-md space-y-sm">
             <div class="flex items-center justify-between">
                 <p class="font-label-md text-label-md text-error uppercase tracking-widest flex items-center gap-xs">
-                    <span class="material-symbols-outlined text-[18px]">block</span> Not added
+                    <span aria-hidden="true" class="material-symbols-outlined text-[18px]">block</span> Not added
                 </p>
-                <button id="rejected-dismiss" class="p-xs rounded text-on-surface-variant hover:text-on-surface transition-colors">
-                    <span class="material-symbols-outlined text-[18px]">close</span>
+                <button id="rejected-dismiss" aria-label="Dismiss rejected files" class="p-xs rounded text-on-surface-variant hover:text-on-surface transition-colors">
+                    <span aria-hidden="true" class="material-symbols-outlined text-[18px]">close</span>
                 </button>
             </div>
             <ul id="rejected-list" class="space-y-xs"></ul>
@@ -248,7 +295,7 @@
     <section id="recent-section" class="space-y-lg">
         <div class="flex items-center justify-between">
             <h3 class="font-title-md text-title-md text-on-surface flex items-center gap-sm">
-                <span class="material-symbols-outlined text-primary">history</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-primary">history</span>
                 Recent Conversions
             </h3>
             <button id="recent-view-all-btn"
@@ -260,7 +307,7 @@
             <!-- Populated by loadRecentConversions() -->
         </div>
         <div id="recent-empty" class="flex flex-col items-center text-center py-lg gap-sm" hidden>
-            <span class="material-symbols-outlined text-[40px] text-on-surface-variant/40">animation</span>
+            <span aria-hidden="true" class="material-symbols-outlined text-[40px] text-on-surface-variant/40">animation</span>
             <p class="font-body-lg text-body-lg text-on-surface">No conversions yet</p>
             <p class="font-body-sm text-body-sm text-on-surface-variant">Drop images in the zone above and hit Convert to make your first animation.</p>
         </div>
@@ -270,14 +317,14 @@
     <section id="images-section" hidden>
         <div class="flex items-center justify-between mb-lg">
             <h3 class="font-title-md text-title-md text-on-surface flex items-center gap-sm">
-                <span class="material-symbols-outlined text-primary">collections</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-primary">collections</span>
                 Uploaded Frames
                 <span id="file-count-badge"
                     class="ml-sm px-md py-xs rounded-full bg-primary/10 text-primary font-label-md text-label-md border border-primary/20">0</span>
             </h3>
             <button id="clear-all-btn"
                 class="px-md py-sm rounded-lg glass-card text-error hover:bg-error/10 transition-colors flex items-center gap-xs">
-                <span class="material-symbols-outlined text-[18px]">delete_sweep</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[18px]">delete_sweep</span>
                 <span class="font-body-sm text-body-sm">Clear All</span>
             </button>
         </div>
@@ -300,7 +347,7 @@
     <section id="settings-section" hidden>
         <div class="glass-card rounded-xl p-lg space-y-lg">
             <h3 class="font-title-md text-title-md text-on-surface flex items-center gap-sm">
-                <span class="material-symbols-outlined text-primary">tune</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-primary">tune</span>
                 Conversion Settings
             </h3>
 
@@ -367,13 +414,27 @@
                 </div>
             </div>
 
+<section id="setting-pdf-panel" hidden class="glass-card rounded-lg p-lg space-y-md font-body-sm text-body-sm" aria-label="PDF page layout">
+ <p class="font-bold">PDF page layout</p>
+ <div class="grid grid-cols-2 gap-md">
+ <label class="block">Page size<select id="setting-pdf-page-size" class="w-full bg-surface-container-lowest text-on-surface rounded-lg py-sm px-md"><option value="original">Original image size</option><option value="a4">A4</option><option value="letter">Letter</option><option value="custom">Custom (mm)</option></select></label>
+ <label class="block">Orientation<select id="setting-pdf-orientation" class="w-full bg-surface-container-lowest text-on-surface rounded-lg py-sm px-md"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></label>
+ <label class="block">Custom side 1 (mm)<input id="setting-pdf-width-mm" type="number" value="210" min="50" max="600" step="0.1" class="w-full bg-surface-container-lowest text-on-surface rounded-lg py-sm px-md"/></label>
+ <label class="block">Custom side 2 (mm)<input id="setting-pdf-height-mm" type="number" value="297" min="50" max="600" step="0.1" class="w-full bg-surface-container-lowest text-on-surface rounded-lg py-sm px-md"/></label>
+ <label class="block">Margin on every side (mm)<input id="setting-pdf-margin-mm" type="number" value="10" min="0" max="100" step="0.1" class="w-full bg-surface-container-lowest text-on-surface rounded-lg py-sm px-md"/></label>
+ <label class="block">Image placement<select id="setting-pdf-fit" class="w-full bg-surface-container-lowest text-on-surface rounded-lg py-sm px-md"><option value="fit">Fit whole image</option><option value="crop">Fill and crop edges</option></select></label>
+ </div>
+ <p id="setting-pdf-message" role="status"></p>
+ <canvas id="setting-pdf-preview" width="240" height="340" role="img" aria-label="Representative first PDF page" style="max-width:100%;height:auto;border:1px solid #777" hidden></canvas>
+ <p>One image per page, in frame order. White paper; transparency becomes white. Fixed pages render at 144 dpi; physical sizes round by less than 0.1 mm. Layout preview uses the first image; pixel edits are applied on export.</p>
+ </section>
             <!-- ── Live output-size estimate (client-side heuristic) ── -->
             <p id="size-estimate" class="font-label-sm text-label-sm text-secondary"></p>
 
             <!-- ── Resolution summary (populated when frames added) ── -->
             <div id="resolution-summary" hidden class="rounded-lg border border-primary/20 bg-primary/5 px-md py-sm space-y-sm">
                 <p class="font-body-sm text-body-sm text-on-surface-variant flex items-start gap-xs">
-                    <span class="material-symbols-outlined text-[18px] text-primary shrink-0">straighten</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[18px] text-primary shrink-0">straighten</span>
                     <span id="resolution-summary-text"></span>
                 </p>
                 <div id="resolution-summary-actions" class="flex flex-wrap gap-sm"></div>
@@ -384,13 +445,13 @@
                 <label class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest block" for="setting-resize-mode">Resize mode</label>
                 <select id="setting-resize-mode"
                     class="w-full sm:w-auto bg-surface-container-lowest/60 border border-outline-variant/20 rounded-lg py-sm px-md text-on-surface focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all text-body-sm">
-                    <option value="fit">Fit — shrink only (default)</option>
+                    <option value="fit">Fit — shrink to bounds (default)</option>
                     <option value="pad">Exact — pad with bars</option>
                     <option value="crop">Exact — crop to fill</option>
                     <option value="stretch">Stretch — may distort</option>
                 </select>
                 <p id="resize-mode-hint" class="font-body-sm text-body-sm text-on-surface-variant flex items-start gap-xs">
-                    <span class="material-symbols-outlined text-[16px] text-on-surface-variant shrink-0">info</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[16px] text-on-surface-variant shrink-0">info</span>
                     <span id="resize-mode-hint-text"></span>
                 </p>
             </div>
@@ -409,17 +470,18 @@
             <!-- ── Resolution helper ───────────────────────── -->
             <details class="help-card rounded-lg border border-outline-variant/15 bg-surface-container-lowest/40 px-md py-sm">
                 <summary class="flex items-center gap-xs cursor-pointer select-none font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors">
-                    <span class="material-symbols-outlined text-[16px] help-chevron transition-transform">chevron_right</span>
-                    <span class="material-symbols-outlined text-[16px] text-primary">help</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[16px] help-chevron transition-transform">chevron_right</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[16px] text-primary">help</span>
                     How does resolution work?
                 </summary>
                 <div class="mt-sm pl-lg space-y-sm font-body-sm text-body-sm text-on-surface-variant">
                     <p class="text-on-surface font-bold">How to get the best resolution</p>
                     <ul class="space-y-xs list-disc pl-md">
                         <li>The output is only as sharp as your <strong class="text-on-surface">smallest source image</strong>. Enlarging a small photo cannot invent detail — it just gets blurry.</li>
-                        <li>When frames are <strong class="text-on-surface">different sizes</strong>, MagicFlow keeps each frame's own size. For a clean animation, set an explicit Width/Height so every frame matches.</li>
-                        <li>Leave Width/Height <strong class="text-on-surface">empty</strong> to keep originals at full size (largest possible resolution, larger file).</li>
-                        <li>The resize is <strong class="text-on-surface">shrink-only</strong> — it never upscales, so you never lose sharpness to fake enlargement.</li>
+                        <li>Animations and videos center every transformed frame on one canvas, sized to the widest and tallest frame. Smaller frames get padding, without another resize or crop.</li>
+                        <li>Leave Width/Height <strong class="text-on-surface">empty</strong> to keep the original image sizes inside that canvas. TIFF/PDF pages keep their individual sizes.</li>
+                        <li><strong class="text-on-surface">Fit</strong> uses Width/Height as shrink-only bounds. <strong class="text-on-surface">Exact — pad</strong> keeps the whole image in a chosen canvas; <strong class="text-on-surface">crop</strong> fills it by removing edges. Exact modes may enlarge images.</li>
+                        <li>Tagged SDR colors are converted to sRGB before metadata is removed. Animation frames use 8-bit samples; GIF has binary transparency and Video decoding is opaque; use APNG for transparent editing round trips. Animation padding is transparent unless you choose a background. MP4 is opaque, defaults to black, and adds a right/bottom pixel when needed for even dimensions.</li>
                         <li>For pixel-art or screenshots, prefer <strong class="text-on-surface">PNG/APNG</strong> (lossless). For photos, <strong class="text-on-surface">WebP</strong> gives the best size-to-quality ratio.</li>
                     </ul>
                 </div>
@@ -427,9 +489,9 @@
 
             <!-- ── Advanced toggle ─────────────────────────── -->
             <div>
-                <button id="advanced-toggle-btn" type="button"
+                <button id="advanced-toggle-btn" aria-expanded="false" aria-controls="advanced-panel" type="button"
                     class="flex items-center gap-xs font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors">
-                    <span class="material-symbols-outlined text-[16px]" id="advanced-toggle-icon">chevron_right</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-[16px]" id="advanced-toggle-icon">chevron_right</span>
                     Advanced options
                 </button>
             </div>
@@ -624,7 +686,7 @@
             <!-- Output filename + Keep toggle -->
             <div class="flex items-center justify-between flex-wrap gap-md">
                 <div class="flex items-center gap-sm bg-surface-container-lowest/50 rounded-lg px-md py-sm border border-outline-variant/10 flex-1 min-w-0">
-                    <span class="material-symbols-outlined text-on-surface-variant text-[18px] shrink-0">draft</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-on-surface-variant text-[18px] shrink-0">draft</span>
                     <span class="font-label-md text-label-md text-on-surface-variant shrink-0">Output:</span>
                     <input id="output-name" type="text" spellcheck="false" autocomplete="off"
                         class="bg-transparent border-none outline-none text-primary font-label-md text-label-md flex-1 min-w-0 truncate placeholder:text-on-surface-variant/40"
@@ -650,22 +712,22 @@
             <div class="w-24 h-24 rounded-lg overflow-hidden bg-surface-container-low shrink-0 flex items-center justify-center">
                 <img id="extract-preview-img" src="" alt="Selected file"
                      class="w-full h-full object-cover" style="display:none"/>
-                <span id="extract-preview-icon" class="material-symbols-outlined text-primary text-[40px] opacity-40">movie</span>
+                <span aria-hidden="true" id="extract-preview-icon" class="material-symbols-outlined text-primary text-[40px] opacity-40">movie</span>
             </div>
             <div class="flex-1 min-w-0">
                 <h4 id="extract-file-name" class="font-title-md text-body-lg text-on-surface truncate"></h4>
                 <p id="extract-file-meta" class="font-label-sm text-label-sm text-on-surface-variant"></p>
             </div>
-            <button id="extract-remove-btn"
+            <button id="extract-remove-btn" aria-label="Remove extraction source"
                 class="p-sm rounded-lg glass-card border-error/20 text-error hover:bg-error/10 transition-colors shrink-0">
-                <span class="material-symbols-outlined text-[18px]">delete</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[18px]">delete</span>
             </button>
         </div>
 
         <!-- Extract settings -->
         <div class="glass-card rounded-xl p-lg space-y-lg">
             <h3 class="font-title-md text-title-md text-on-surface flex items-center gap-sm">
-                <span class="material-symbols-outlined text-primary">grid_view</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-primary">grid_view</span>
                 Extract Settings
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-lg">
@@ -704,17 +766,17 @@
                 </div>
             </div>
             <p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-sm">
-                <span class="material-symbols-outlined text-[18px] text-on-surface-variant">info</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[18px] text-on-surface-variant">info</span>
                 Frames are extracted as individual stills and delivered as a ZIP. PNG keeps every pixel; JPEG/WebP are smaller. Frames are 0-indexed; leave the range blank to extract every frame.
             </p>
             <button id="extract-btn"
                 class="w-full py-md rounded-xl primary-gradient text-on-primary font-bold flex items-center justify-center gap-sm hover:brightness-110 transition-all active:scale-95">
-                <span class="material-symbols-outlined">grid_view</span>
+                <span aria-hidden="true" class="material-symbols-outlined">grid_view</span>
                 Extract Frames
             </button>
             <button id="extract-edit-btn" hidden
                 class="w-full py-md rounded-xl glass-card border-primary/30 text-primary font-bold flex items-center justify-center gap-sm hover:bg-primary/10 transition-all active:scale-95">
-                <span class="material-symbols-outlined">edit</span>
+                <span aria-hidden="true" class="material-symbols-outlined">edit</span>
                 Edit frames in Combine
             </button>
         </div>
@@ -722,11 +784,12 @@
 
     <!-- ══ Convert Image panel (Convert mode only) ══ -->
     <section id="convert-section" hidden class="space-y-lg">
+        <p id="convert-color-hint" class="font-body-sm text-body-sm text-on-surface-variant">Exports respect photo orientation and convert tagged SDR colors to sRGB.</p>
         <!-- Images to convert (batch) -->
         <div id="convert-files-wrap" hidden>
             <div class="flex items-center justify-between mb-lg">
                 <h3 class="font-title-md text-title-md text-on-surface flex items-center gap-sm">
-                    <span class="material-symbols-outlined text-primary">collections</span>
+                    <span aria-hidden="true" class="material-symbols-outlined text-primary">collections</span>
                     Images to Convert
                     <span id="convert-count-badge"
                         class="ml-sm px-md py-xs rounded-full bg-primary/10 text-primary font-label-md text-label-md border border-primary/20">0</span>
@@ -734,12 +797,12 @@
                 <div class="flex items-center gap-sm">
                     <button id="convert-download-all-btn" hidden
                         class="px-md py-sm rounded-lg glass-card text-tertiary hover:bg-tertiary/10 transition-colors flex items-center gap-xs">
-                        <span class="material-symbols-outlined text-[18px]">download</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">download</span>
                         <span class="font-body-sm text-body-sm">Download all</span>
                     </button>
                     <button id="convert-clear-all-btn"
                         class="px-md py-sm rounded-lg glass-card text-error hover:bg-error/10 transition-colors flex items-center gap-xs">
-                        <span class="material-symbols-outlined text-[18px]">delete_sweep</span>
+                        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">delete_sweep</span>
                         <span class="font-body-sm text-body-sm">Clear All</span>
                     </button>
                 </div>
@@ -752,7 +815,7 @@
         <!-- Convert settings -->
         <div class="glass-card rounded-xl p-lg space-y-lg">
             <h3 class="font-title-md text-title-md text-on-surface flex items-center gap-sm">
-                <span class="material-symbols-outlined text-primary">swap_horiz</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-primary">swap_horiz</span>
                 Convert Settings
             </h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-lg">
@@ -763,11 +826,20 @@
                         <option value="jpg">JPEG</option>
                         <option value="png">PNG (lossless)</option>
                         <option value="webp">WebP</option>
+                        <optgroup label="More image formats">
                         <option value="avif">AVIF</option>
                         <option value="heic">HEIC</option>
                         <option value="tiff">TIFF (lossless)</option>
                         <option value="bmp">BMP</option>
                         <option value="tga">TGA</option>
+                        <option value="ico">ICO (single icon)</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="space-y-sm" id="convert-icon-wrap" hidden>
+                    <label for="convert-icon-size" class="font-label-md text-label-md text-on-surface-variant">Icon size (square pixels)</label>
+                    <select id="convert-icon-size" class="w-full bg-surface-container-lowest/60 border border-outline-variant/20 rounded-lg py-md px-md">
+                        <option value="16">16 × 16</option><option value="24">24 × 24</option><option value="32">32 × 32</option><option value="48">48 × 48</option><option value="64">64 × 64</option><option value="128">128 × 128</option><option value="256" selected>256 × 256</option>
                     </select>
                 </div>
                 <div class="space-y-sm" id="convert-quality-wrap">
@@ -787,7 +859,7 @@
                 </div>
             </div>
             <p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-sm">
-                <span class="material-symbols-outlined text-[18px] text-on-surface-variant">info</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[18px] text-on-surface-variant">info</span>
                 Converts one image to another format. RAW, HEIC, PSD and TIFF accepted as input. Resize is shrink-only and optional. Leave Width/Height empty to keep the original size.
             </p>
             <div class="flex flex-wrap items-center gap-md">
@@ -808,8 +880,8 @@
             </div>
             <button id="convert-image-btn"
                 class="w-full py-md rounded-xl primary-gradient text-on-primary font-bold flex items-center justify-center gap-sm hover:brightness-110 transition-all active:scale-95">
-                <span class="material-symbols-outlined">swap_horiz</span>
-                Convert All
+                <span aria-hidden="true" class="material-symbols-outlined">swap_horiz</span>
+                Convert pending / retry failed
             </button>
         </div>
     </section>
@@ -818,9 +890,9 @@
     <section id="status-section" hidden>
         <div class="glass-card rounded-xl p-lg">
             <div class="flex items-center gap-md">
-                <span id="status-spinner" class="material-symbols-outlined text-secondary spin" style="display:none">sync</span>
-                <span id="status-icon-ok" class="material-symbols-outlined text-tertiary" style="display:none">check_circle</span>
-                <span id="status-icon-err" class="material-symbols-outlined text-error" style="display:none">error</span>
+                <span aria-hidden="true" id="status-spinner" class="material-symbols-outlined text-secondary spin" style="display:none">sync</span>
+                <span aria-hidden="true" id="status-icon-ok" class="material-symbols-outlined text-tertiary" style="display:none">check_circle</span>
+                <span aria-hidden="true" id="status-icon-err" class="material-symbols-outlined text-error" style="display:none">error</span>
                 <p id="status-text" class="font-body-lg text-body-lg text-on-surface-variant"></p>
             </div>
         </div>
@@ -830,7 +902,7 @@
     <section id="download-section" hidden>
         <div class="glass-card rounded-xl p-lg space-y-md">
             <div class="flex items-center gap-sm">
-                <span class="material-symbols-outlined text-tertiary">check_circle</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-tertiary">check_circle</span>
                 <h3 class="font-title-md text-title-md text-tertiary">Conversion Complete</h3>
             </div>
             <!-- Animated preview -->
@@ -840,22 +912,28 @@
                     style="display:none"/>
                 <video id="preview-video" class="max-w-full max-h-[480px] object-contain" controls loop muted playsinline
                     style="display:none"></video>
-                <span id="preview-loading" class="material-symbols-outlined text-on-surface-variant spin" style="font-size:36px">sync</span>
+                <span aria-hidden="true" id="preview-loading" class="material-symbols-outlined text-on-surface-variant spin" style="font-size:36px">sync</span>
+                <div id="preview-unavailable" class="flex-col items-center text-center gap-sm py-xl px-lg text-on-surface-variant" style="display:none">
+                    <span aria-hidden="true" class="material-symbols-outlined text-[48px] opacity-40">visibility_off</span>
+                    <p class="font-body-md text-body-md text-on-surface">Preview not available for this format</p>
+                    <p class="font-label-sm text-label-sm">The file converted successfully — use Download below.</p>
+                </div>
             </div>
             <div class="flex items-center gap-sm bg-surface-container-lowest/50 rounded-lg px-md py-sm border border-tertiary/20">
-                <span class="material-symbols-outlined text-on-surface-variant text-[18px]">draft</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-on-surface-variant text-[18px]">draft</span>
                 <span id="download-filename" class="font-label-md text-label-md text-tertiary truncate flex-1"></span>
                 <span id="download-filesize" class="font-label-sm text-label-sm text-on-surface-variant shrink-0 ml-auto"></span>
             </div>
             <div class="flex gap-md flex-wrap">
                 <button id="download-btn"
                     class="flex-1 py-md rounded-xl bg-tertiary text-on-tertiary font-bold flex items-center justify-center gap-sm hover:brightness-110 transition-all shadow-[0_0_15px_rgba(78,222,163,0.2)] active:scale-95 min-w-[160px]">
-                    <span class="material-symbols-outlined">download</span>
+                    <span aria-hidden="true" class="material-symbols-outlined">download</span>
                     Download
                 </button>
+                <button id="compare-result-btn" class="px-lg py-md rounded-xl glass-card">Compare first input</button>
                 <button id="new-from-download-btn"
                     class="px-lg py-md rounded-xl glass-card text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors flex items-center gap-sm font-medium">
-                    <span class="material-symbols-outlined">add_circle</span>
+                    <span aria-hidden="true" class="material-symbols-outlined">add_circle</span>
                     New Conversion
                 </button>
             </div>
@@ -869,28 +947,29 @@
 <div id="view-files" hidden class="space-y-xl">
     <div class="flex items-center justify-between">
         <h3 class="font-title-md text-title-md text-on-surface flex items-center gap-sm">
-            <span class="material-symbols-outlined text-primary">folder_open</span>
+            <span aria-hidden="true" class="material-symbols-outlined text-primary">folder_open</span>
             Saved Conversions
         </h3>
         <div class="flex items-center gap-sm flex-wrap justify-end">
             <button id="select-all-files-btn"
                 class="px-md py-sm rounded-lg glass-card text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-xs">
-                <span class="material-symbols-outlined text-[18px]">select_all</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[18px]">select_all</span>
                 <span class="font-body-sm text-body-sm">Select all</span>
             </button>
             <button id="download-selected-btn" disabled
                 class="px-md py-sm rounded-lg glass-card text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-xs disabled:opacity-30 disabled:pointer-events-none">
-                <span class="material-symbols-outlined text-[18px]">download</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[18px]">download</span>
                 <span class="font-body-sm text-body-sm">Download selected</span>
             </button>
+            <button id="compare-selected-btn" disabled title="Compare exactly two selected files, including hidden selections" class="px-md py-sm rounded-lg glass-card disabled:opacity-30">Compare selected</button>
             <button id="delete-selected-btn" disabled
                 class="px-md py-sm rounded-lg glass-card text-error hover:bg-error/10 transition-colors flex items-center gap-xs disabled:opacity-30 disabled:pointer-events-none">
-                <span class="material-symbols-outlined text-[18px]">delete</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[18px]">delete</span>
                 <span class="font-body-sm text-body-sm">Delete selected</span>
             </button>
             <button id="refresh-files-btn"
                 class="px-md py-sm rounded-lg glass-card text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-xs">
-                <span class="material-symbols-outlined text-[18px]">refresh</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[18px]">refresh</span>
                 <span class="font-body-sm text-body-sm">Refresh</span>
             </button>
         </div>
@@ -898,7 +977,7 @@
     <div id="saved-files-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-lg">
     </div>
     <div id="no-saved-files" class="flex flex-col items-center text-center py-xl gap-sm" hidden>
-        <span class="material-symbols-outlined text-[48px] text-on-surface-variant/40">folder_open</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[48px] text-on-surface-variant/40">folder_open</span>
         <p class="font-body-lg text-body-lg text-on-surface">No saved files yet</p>
         <p class="font-body-sm text-body-sm text-on-surface-variant">Go to the Dashboard, drop some images, and convert — finished files with "Keep on server" on appear here.</p>
     </div>
@@ -907,16 +986,16 @@
 <!-- ══ Settings view ══════════════════════════════ -->
 <div id="view-settings" hidden class="space-y-xl">
     <h3 class="font-title-md text-title-md text-on-surface flex items-center gap-sm">
-        <span class="material-symbols-outlined text-primary">settings</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-primary">settings</span>
         Settings
     </h3>
     <div class="glass-card rounded-xl p-lg space-y-unit">
         <div class="flex items-center justify-between py-md border-b border-outline-variant/10">
             <div>
                 <p class="font-body-lg text-body-lg text-on-surface">App Version</p>
-                <p class="font-body-sm text-body-sm text-on-surface-variant">MagicFlow v1.1.1 — local use only</p>
+                <p id="app-build-details" class="font-body-sm text-body-sm text-on-surface-variant">Development build</p>
             </div>
-            <span class="font-label-md text-label-md text-primary px-md py-sm rounded-full bg-primary/10 border border-primary/20">v1.1.1</span>
+            <span id="app-build-version" class="font-label-md text-label-md text-primary px-md py-sm rounded-full bg-primary/10 border border-primary/20">development</span>
         </div>
         <div class="flex items-center justify-between py-md border-b border-outline-variant/10">
             <div>
@@ -933,7 +1012,7 @@
                 <p class="font-body-lg text-body-lg text-on-surface">Output Directory</p>
                 <p id="settings-output-dir" class="font-body-sm text-body-sm text-on-surface-variant">/data/output</p>
             </div>
-            <span class="material-symbols-outlined text-on-surface-variant">folder</span>
+            <span aria-hidden="true" class="material-symbols-outlined text-on-surface-variant">folder</span>
         </div>
         <div class="flex items-center justify-between py-md border-b border-outline-variant/10">
             <div>
@@ -952,7 +1031,7 @@
                 <p class="font-body-lg text-body-lg text-on-surface">Accepted Formats</p>
                 <p id="settings-formats" class="font-body-sm text-body-sm text-on-surface-variant">Input: JPG, PNG, APNG, WebP, GIF, BMP, TGA, TIFF, PSD, HEIC, RAW (CR2/NEF/ARW/DNG…) — Output: GIF, WebP, APNG, TIFF, PDF</p>
             </div>
-            <span class="material-symbols-outlined text-on-surface-variant">image</span>
+            <span aria-hidden="true" class="material-symbols-outlined text-on-surface-variant">image</span>
         </div>
     </div>
 </div>
@@ -966,7 +1045,7 @@
         title="Convert frames"
         class="primary-gradient text-on-primary font-bold rounded-full flex items-center gap-xs shadow-lg hover:scale-105 active:scale-95 transition-all group"
         style="padding:6px 12px">
-        <span class="material-symbols-outlined group-hover:rotate-12 transition-transform" style="font-size:16px">auto_fix_high</span>
+        <span aria-hidden="true" class="material-symbols-outlined group-hover:rotate-12 transition-transform" style="font-size:16px">auto_fix_high</span>
         <div class="flex flex-col items-start leading-none">
             <span id="fab-frame-count" class="opacity-60" style="font-size:8px;letter-spacing:.06em">0 FRAMES</span>
             <span class="font-bold" style="font-size:11px">Convert</span>
@@ -975,19 +1054,24 @@
 </div>
 
 <!-- ══ Re-convert modal ══════════════════════════════ -->
-<div id="reconvert-modal" class="fixed inset-0 z-[90] items-center justify-center p-md" style="display:none">
+<div id="reconvert-modal" role="dialog" aria-modal="true" aria-labelledby="reconvert-title" tabindex="-1" class="fixed inset-0 z-[90] items-center justify-center p-md" style="display:none">
     <div id="reconvert-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
     <div class="relative glass-card rounded-2xl p-lg w-full max-w-lg space-y-lg max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between gap-md">
-            <h3 class="font-title-md text-title-md text-on-surface flex items-center gap-sm">
-                <span class="material-symbols-outlined text-primary">cached</span>
+            <h3 id="reconvert-title" class="font-title-md text-title-md text-on-surface flex items-center gap-sm">
+                <span aria-hidden="true" class="material-symbols-outlined text-primary">cached</span>
                 Re-convert
             </h3>
-            <button id="reconvert-close" class="p-sm rounded-full text-on-surface-variant hover:text-primary transition-colors">
-                <span class="material-symbols-outlined">close</span>
+            <button id="reconvert-close" aria-label="Close Re-convert" class="p-sm rounded-full text-on-surface-variant hover:text-primary transition-colors">
+                <span aria-hidden="true" class="material-symbols-outlined">close</span>
             </button>
         </div>
         <p id="reconvert-source" class="font-body-sm text-body-sm text-on-surface-variant truncate"></p>
+        <p class="font-body-sm text-body-sm text-on-surface-variant">Re-encode this saved output. Its previous effects are already applied; original uploads are not retained. Leave Width and Height on Auto to keep its size.</p>
+        <details class="font-body-sm text-body-sm text-on-surface-variant">
+            <summary class="cursor-pointer">How this file was made (read-only)</summary>
+            <p id="reconvert-provenance" class="mt-sm" style="white-space: pre-wrap; overflow-wrap: anywhere"></p>
+        </details>
 
         <div class="grid grid-cols-2 gap-lg">
             <div class="space-y-sm">
@@ -1047,13 +1131,29 @@
                 <label class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest block" for="reconvert-resize-mode">Resize mode</label>
                 <select id="reconvert-resize-mode"
                     class="w-full bg-surface-container-lowest/60 border border-outline-variant/20 rounded-lg py-md px-md text-on-surface font-body-md focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all">
-                    <option value="fit">Fit — shrink only (default)</option>
+                    <option value="fit">Fit — shrink to bounds (default)</option>
                     <option value="pad">Exact — pad with bars</option>
                     <option value="crop">Exact — crop to fill</option>
                     <option value="stretch">Stretch — may distort</option>
                 </select>
             </div>
         </div>
+
+<section id="reconvert-pdf-panel" hidden class="glass-card rounded-lg p-lg space-y-md font-body-sm text-body-sm" aria-label="PDF page layout">
+ <p class="font-bold">PDF page layout</p>
+ <div class="grid grid-cols-2 gap-md">
+ <label class="block">Page size<select id="reconvert-pdf-page-size" class="w-full bg-surface-container-lowest text-on-surface rounded-lg py-sm px-md"><option value="original">Original image size</option><option value="a4">A4</option><option value="letter">Letter</option><option value="custom">Custom (mm)</option></select></label>
+ <label class="block">Orientation<select id="reconvert-pdf-orientation" class="w-full bg-surface-container-lowest text-on-surface rounded-lg py-sm px-md"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></label>
+ <label class="block">Custom side 1 (mm)<input id="reconvert-pdf-width-mm" type="number" value="210" min="50" max="600" step="0.1" class="w-full bg-surface-container-lowest text-on-surface rounded-lg py-sm px-md"/></label>
+ <label class="block">Custom side 2 (mm)<input id="reconvert-pdf-height-mm" type="number" value="297" min="50" max="600" step="0.1" class="w-full bg-surface-container-lowest text-on-surface rounded-lg py-sm px-md"/></label>
+ <label class="block">Margin on every side (mm)<input id="reconvert-pdf-margin-mm" type="number" value="10" min="0" max="100" step="0.1" class="w-full bg-surface-container-lowest text-on-surface rounded-lg py-sm px-md"/></label>
+ <label class="block">Image placement<select id="reconvert-pdf-fit" class="w-full bg-surface-container-lowest text-on-surface rounded-lg py-sm px-md"><option value="fit">Fit whole image</option><option value="crop">Fill and crop edges</option></select></label>
+ </div>
+ <p id="reconvert-pdf-message" role="status"></p>
+ <canvas id="reconvert-pdf-preview" width="240" height="340" role="img" aria-label="Representative first PDF page" style="max-width:100%;height:auto;border:1px solid #777" hidden></canvas>
+ <p>One image per page, in frame order. White paper; transparency becomes white. Fixed pages render at 144 dpi; physical sizes round by less than 0.1 mm. Layout preview uses the first image; pixel edits are applied on export.</p>
+ </section>
+        <p class="font-body-sm text-body-sm text-on-surface-variant">Fit keeps images within the size bounds. Animation/video frames share a centered canvas with transparent padding, or your background color. MP4 defaults to black and pads the right/bottom to even dimensions. TIFF/PDF pages stay independent. Video sources decode as opaque SDR frames. Choose Exact pad or crop for a specific canvas.</p>
 
         <!-- ── Boomerang / ping-pong ───────────────────── -->
         <label class="flex items-center gap-sm cursor-pointer select-none"
@@ -1067,9 +1167,9 @@
 
         <!-- ── Advanced toggle (mirror of the dashboard panel) ── -->
         <div>
-            <button id="reconvert-advanced-toggle-btn" type="button"
+            <button id="reconvert-advanced-toggle-btn" aria-expanded="false" aria-controls="reconvert-advanced-panel" type="button"
                 class="flex items-center gap-xs font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors">
-                <span class="material-symbols-outlined text-[16px]" id="reconvert-advanced-toggle-icon">chevron_right</span>
+                <span aria-hidden="true" class="material-symbols-outlined text-[16px]" id="reconvert-advanced-toggle-icon">chevron_right</span>
                 Advanced options
             </button>
         </div>
@@ -1269,12 +1369,29 @@
             </label>
         </div>
 
-        <p id="reconvert-status" class="font-body-sm text-body-sm" style="display:none"></p>
+        <p id="reconvert-status" role="status" class="font-body-sm text-body-sm" style="display:none"></p>
+
+        <!-- A not-kept re-conversion is hidden from My Files, so its only route
+             to the user is here; the modal stays open until it is collected. -->
+        <div id="reconvert-result" class="rounded-xl p-md space-y-sm border border-tertiary/30 bg-surface-container-lowest/50" style="display:none">
+            <div class="flex items-center gap-sm">
+                <span aria-hidden="true" class="material-symbols-outlined text-tertiary text-[18px]">check_circle</span>
+                <span id="reconvert-result-name" class="font-label-md text-label-md text-tertiary truncate flex-1"></span>
+                <span id="reconvert-result-size" class="font-label-sm text-label-sm text-on-surface-variant shrink-0"></span>
+            </div>
+            <p id="reconvert-result-note" class="font-body-sm text-body-sm text-on-surface-variant"></p>
+            <button id="reconvert-compare" class="p-sm rounded-lg glass-card">Compare source and output</button>
+            <button id="reconvert-download"
+                class="w-full py-sm rounded-lg bg-tertiary text-on-tertiary font-bold flex items-center justify-center gap-sm hover:brightness-110 transition-all disabled:opacity-50 disabled:pointer-events-none">
+                <span aria-hidden="true" class="material-symbols-outlined">download</span>
+                Download
+            </button>
+        </div>
 
         <div class="flex gap-md">
             <button id="reconvert-submit"
                 class="flex-1 py-md rounded-xl primary-gradient text-on-primary font-bold flex items-center justify-center gap-sm hover:brightness-110 transition-all active:scale-95">
-                <span class="material-symbols-outlined">cached</span>
+                <span aria-hidden="true" class="material-symbols-outlined">cached</span>
                 Re-convert
             </button>
             <button id="reconvert-cancel"
@@ -1286,7 +1403,7 @@
 </div>
 
 <!-- ══ Full-size file preview (lightbox) ══════════════════════════════ -->
-<div id="lightbox" class="fixed inset-0 z-[95] items-center justify-center" style="display:none"
+<div id="lightbox" tabindex="-1" class="fixed inset-0 z-[95] items-center justify-center" style="display:none"
      role="dialog" aria-modal="true" aria-label="File preview">
     <div id="lightbox-backdrop" class="absolute inset-0 bg-black/90 backdrop-blur-sm"></div>
     <div class="relative w-full h-full flex flex-col p-md md:p-lg">
@@ -1294,7 +1411,7 @@
             <p id="lightbox-name" class="font-body-md text-body-md text-on-surface truncate min-w-0"></p>
             <button id="lightbox-close" aria-label="Close preview" title="Close (Esc)"
                 class="p-sm rounded-full glass-card text-on-surface hover:text-primary transition-colors shrink-0">
-                <span class="material-symbols-outlined">close</span>
+                <span aria-hidden="true" class="material-symbols-outlined">close</span>
             </button>
         </div>
         <!-- Stage: media is injected here and fills the viewport (object-contain) -->
@@ -1302,6 +1419,33 @@
     </div>
 </div>
 
+
+<!-- Reduced first-frame comparison: independent of full-resolution playback. -->
+<div id="compare-modal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="compare-title"
+     class="fixed inset-0 items-center justify-center" style="display:none;z-index:110;background:rgba(0,0,0,.85)">
+ <div class="compare-dialog">
+  <div class="flex justify-between items-center gap-md"><h2 id="compare-title">Compare previews</h2><button id="compare-close" aria-label="Close comparison" class="p-sm">Close</button></div>
+  <p>First frame/page only. Animation and video timing are not synchronized.</p>
+  <p>Bounded 8-bit sRGB previews, at most 640 × 640 px. Not pixel-exact; source files stay unchanged.</p>
+  <div class="compare-controls">
+   <label for="compare-zoom">Shared zoom</label><input id="compare-zoom" type="range" min="1" max="8" step="0.25" value="1"><output id="compare-zoom-value" for="compare-zoom">1.00×</output>
+   <button id="compare-reset">Reset view</button>
+   <label for="compare-background">Viewing background</label><select id="compare-background"><option value="checker">Checkerboard</option><option value="white">White</option><option value="black">Black</option></select>
+  </div>
+  <p id="compare-geometry">Equal-sized previews align under shared pan/zoom. Different source dimensions are not pixel-aligned.</p>
+  <div class="compare-grid">
+   <section class="compare-slot"><h3>Left</h3><p data-compare-info></p>
+    <div class="compare-surface" data-background="checker" tabindex="0" role="group" aria-label="Left preview; drag or use arrow keys to pan both previews"><img hidden alt="Left first-frame preview"></div>
+    <p data-compare-status role="status"></p></section>
+   <section class="compare-slot"><h3>Right</h3><p data-compare-info></p>
+    <div class="compare-surface" data-background="checker" tabindex="0" role="group" aria-label="Right preview; drag or use arrow keys to pan both previews"><img hidden alt="Right first-frame preview"></div>
+    <p data-compare-status role="status"></p></section>
+  </div>
+  <p>Checkerboard reveals transparency; white/black are viewing backgrounds only. Drag either pane or use its arrow keys to pan both. PDF dimensions use 72 dpi rasterization.</p>
+  <p>Original missing? Close this view and select exactly two saved files in My Files to compare outputs instead.</p>
+ </div>
+</div>
+<script src="/static/compare.js"></script>
 <script>
 // ════════════════════════════════════════════════
 // STATE
@@ -1328,7 +1472,7 @@ function renderRejected() {
     if (!state.rejected.length) { section.hidden = true; list.innerHTML = ''; return; }
     list.innerHTML = state.rejected.map(r =>
         '<li class="font-body-sm text-body-sm text-on-surface-variant flex items-start gap-xs">' +
-        '<span class="material-symbols-outlined text-[16px] text-error shrink-0">error</span>' +
+        '<span aria-hidden="true" class="material-symbols-outlined text-[16px] text-error shrink-0">error</span>' +
         '<span><span class="text-on-surface">' + escapeHtml(r.name) + '</span> — ' + escapeHtml(r.reason) + '</span></li>'
     ).join('');
     section.hidden = false;
@@ -1352,25 +1496,171 @@ function getMaxFiles() {
 }
 // Fallbacks only — overwritten from GET /config (MAX_FILE_SIZE / ALLOWED_EXTENSIONS in the backend)
 let MAX_BYTES = 50 * 1024 * 1024;
+// Camera RAW arrives with no agreed MIME type — browsers send octet-stream, a
+// vendor type, or nothing — so the server skips the MIME check for these
+// extensions. The browser must apply the same rule or it rejects files the
+// server would accept. Replaced from /config at startup.
+let RAW_EXTS = new Set(['.cr2', '.cr3', '.nef', '.arw', '.dng', '.raf', '.orf', '.rw2', '.pef', '.srw']);
+
+// Mirrors utils.validate_file: extension must be allowed, and the MIME must be
+// allowed unless it is absent or the extension is a RAW one.
+function typeRejection(file) {
+    const ext = ('.' + file.name.split('.').pop()).toLowerCase();
+    if (!ALLOWED_EXTS.has(ext)) {
+        return 'Unsupported type "' + ext + '". ' + (unavailableInputReason(ext) || 'Accepted: ' +
+            [...ALLOWED_EXTS].map(e => e.replace(/^\./, '').toUpperCase()).join(', '));
+    }
+    if (RAW_EXTS.has(ext)) return null;
+    const mime = (file.type || '').split(';')[0].trim().toLowerCase();
+    if (mime !== '' && !ALLOWED_TYPES.has(mime)) return 'Unsupported MIME type "' + mime + '".';
+    return null;
+}
+
+// Why an extension the product offers is not accepted here, when the server said.
+function unavailableInputReason(ext) {
+    const reasons = (CONFIG && CONFIG.unavailable) || {};
+    if (RAW_EXTS.has(ext)) return reasons['input:raw'] || null;
+    return reasons['input:' + ext] || null;
+}
+// Per-job upload quota (server: MAGICFLOW_MAX_TOTAL_UPLOAD_BYTES). Checked here
+// so a batch that the server would refuse is never uploaded in the first place.
+let MAX_TOTAL_BYTES = 1024 * 1024 * 1024;
+
+function totalBytes(items) {
+    return items.reduce((sum, item) => sum + ((item.file || item).size || 0), 0);
+}
+
+// Returns a rejection reason when adding `file` would push `items` past the
+// per-job quota, or null when it fits.
+function quotaRejection(items, file) {
+    if (totalBytes(items) + file.size <= MAX_TOTAL_BYTES) return null;
+    return 'Would exceed the ' + formatBytes(MAX_TOTAL_BYTES) + ' per-job upload limit.';
+}
 let ALLOWED_EXTS = new Set([
     '.jpg', '.jpeg', '.png', '.apng', '.webp', '.gif', '.bmp', '.tga',
-    '.tif', '.tiff', '.psd', '.heic', '.heif',
+    '.tif', '.tiff', '.psd', '.heic', '.heif', '.avif',
     '.cr2', '.cr3', '.nef', '.arw', '.dng', '.raf', '.orf', '.rw2', '.pef', '.srw',
 ]);
 // RAW files arrive with empty MIME from the OS — only reject non-empty bad MIMEs
-const ALLOWED_TYPES = new Set([
+// Replaced from /config at startup; these are only the fallback for a page
+// that loaded before the server answered. Keeping a second hand-maintained
+// copy is what let the server accept a PSD while the browser refused it.
+let ALLOWED_TYPES = new Set([
     'image/jpeg', 'image/png', 'image/apng', 'image/webp', 'image/gif', 'image/bmp',
-    'image/tiff', 'image/heic', 'image/heif', 'image/x-tga', 'image/x-tiff',
+    'image/tiff', 'image/avif', 'image/heic', 'image/heif', 'image/x-tga', 'image/x-tiff',
+    'image/vnd.adobe.photoshop', 'application/x-photoshop', 'image/psd',
     'application/octet-stream',
 ]);
 
 // ════════════════════════════════════════════════
 // HELPERS
 // ════════════════════════════════════════════════
+
+// What each numeric setting is allowed to be, mirroring the server's
+// _validate_transform_params. Keyed by the control's suffix, because the same
+// setting appears as setting-saturation in Combine and reconvert-saturation in
+// Re-convert and must behave identically in both.
+const NUMERIC_FIELDS = {
+    delay:      { min: 1,    max: 10000, fallback: 100 },
+    loop:       { min: 0,    max: 1000,  fallback: 0 },
+    quality:    { min: 1,    max: 100,   fallback: 85 },
+    colors:     { min: 2,    max: 256,   fallback: 256 },
+    rotate:     { min: 0,    max: 270,   fallback: 0 },
+    brightness: { min: 50,   max: 150,   fallback: 100 },
+    saturation: { min: 0,    max: 200,   fallback: 100 },
+    hue:        { min: 0,    max: 200,   fallback: 100 },
+    sharpen:    { min: 0,    max: 5,     fallback: 0, decimal: true },
+    blur:       { min: 0,    max: 5,     fallback: 0, decimal: true },
+    width:      { min: 1,    max: 8000,  fallback: null },
+    height:     { min: 1,    max: 8000,  fallback: null },
+    start:      { min: 0,    max: 100000, fallback: 0 },
+    end:        { min: 0,    max: 100000, fallback: null },
+    step:       { min: 1,    max: 100,   fallback: 1 },
+};
+
+// The rule for every numeric control: a BLANK field means "use the default",
+// and a typed 0 means zero. `parseInt(value) || fallback` cannot tell those
+// apart, so saturation 0 and hue 0 — both legal, both meaningful — were sent
+// as 100 and the picture came back unchanged.
+function fieldSpec(id) {
+    return NUMERIC_FIELDS[id.slice(id.indexOf('-') + 1)] || null;
+}
+
+function readNumericField(id, fallbackOverride) {
+    const control = document.getElementById(id);
+    const spec = fieldSpec(id) || {};
+    const fallback = fallbackOverride !== undefined ? fallbackOverride : spec.fallback;
+    if (!control) return fallback;
+    const raw = String(control.value).trim();
+    if (raw === '') return fallback;
+    const value = spec.decimal ? parseFloat(raw) : parseInt(raw, 10);
+    return Number.isFinite(value) ? value : fallback;
+}
+
+// The first control holding a number outside its allowed range, or null when
+// every field is usable. Blank is not invalid — it means the default.
+function firstInvalidField(ids) {
+    for (const id of ids) {
+        const control = document.getElementById(id);
+        const spec = fieldSpec(id);
+        if (!control || !spec) continue;
+        const raw = String(control.value).trim();
+        if (raw === '') continue;
+        const value = spec.decimal ? parseFloat(raw) : parseInt(raw, 10);
+        if (!Number.isFinite(value) || value < spec.min || value > spec.max) return id;
+    }
+    return null;
+}
+
+// Name a control the way the user sees it, so an error can say which field it
+// means without a second hard-coded list to keep in step with the markup.
+function fieldLabel(id) {
+    const label = document.querySelector('label[for="' + id + '"]');
+    const text = label ? label.textContent.trim() : '';
+    return text || id.slice(id.indexOf('-') + 1);
+}
+
+// Refuse to submit a field the server would reject, pointing at the field
+// instead of letting the request fail with a message about an unnamed setting.
+function blockInvalidFields(ids) {
+    const offender = firstInvalidField(ids);
+    if (!offender) return false;
+    const spec = fieldSpec(offender);
+    showStatus(fieldLabel(offender) + ' must be ' + spec.min + '–' + spec.max +
+               ' (currently "' + document.getElementById(offender).value + '").', 'error');
+    const control = document.getElementById(offender);
+    control.focus();
+    if (typeof control.select === 'function') control.select();
+    return true;
+}
+
+
+// True when a timeline actually varies — worth telling the user about, where
+// a uniform one is simply what they asked for.
+function isUneven(delaysMs) {
+    return Array.isArray(delaysMs) && new Set(delaysMs).size > 1;
+}
+
+// Order two frame filenames by the numbers they contain — frame_1000 belongs
+// after frame_999, which a string comparison gets backwards. Falls back to a
+// plain comparison when a name carries no number.
+function compareFrameNames(left, right) {
+    const numbers = name => (String(name).match(/\d+/g) || []).map(Number);
+    const leftNumbers = numbers(left), rightNumbers = numbers(right);
+    for (let i = 0; i < Math.max(leftNumbers.length, rightNumbers.length); i++) {
+        const a = leftNumbers[i], b = rightNumbers[i];
+        if (a === undefined) return -1;
+        if (b === undefined) return 1;
+        if (a !== b) return a - b;
+    }
+    return left < right ? -1 : left > right ? 1 : 0;
+}
+// Safe for element text and quoted attribute values ("…" / '…'); a
+// textContent→innerHTML round-trip would leave quotes raw and let a filename
+// break out of alt/title. Not for unquoted attributes, URLs or inline JS/CSS.
+const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 function escapeHtml(str) {
-    const d = document.createElement('div');
-    d.textContent = String(str);
-    return d.innerHTML;
+    return String(str).replace(/[&<>"']/g, character => HTML_ESCAPES[character]);
 }
 
 function formatBytes(n) {
@@ -1458,6 +1748,7 @@ function handleFiles(fileList) {
 
 // Combine direction: many stills accumulate into a reorderable list.
 function handleCombineFiles(fileList) {
+    if (state.converting) { showToast('Wait for the current operation to finish.'); return; }
     clearRejected();
     let added = 0;
 
@@ -1466,15 +1757,18 @@ function handleCombineFiles(fileList) {
             state.rejected.push({ name: file.name, reason: 'Max of ' + getMaxFiles() + ' files reached (raise it in Settings).' });
             continue;
         }
-        const ext = ('.' + file.name.split('.').pop()).toLowerCase();
-        const mime = (file.type || '').split(';')[0].trim().toLowerCase();
-        // Allow empty MIME (Linux DnD from file manager sends no type for many formats)
-        if (!ALLOWED_EXTS.has(ext) || (mime !== '' && !ALLOWED_TYPES.has(mime))) {
-            state.rejected.push({ name: file.name, reason: 'Unsupported type "' + ext + '". Accepted: JPG, PNG, APNG, WebP, RAW, TIFF, BMP, GIF, HEIC…' });
+        const wrongType = typeRejection(file);
+        if (wrongType) {
+            state.rejected.push({ name: file.name, reason: wrongType });
             continue;
         }
         if (file.size > MAX_BYTES) {
             state.rejected.push({ name: file.name, reason: 'Exceeds the ' + formatBytes(MAX_BYTES) + ' limit (' + formatBytes(file.size) + ').' });
+            continue;
+        }
+        const overQuota = quotaRejection(state.files, file);
+        if (overQuota) {
+            state.rejected.push({ name: file.name, reason: overQuota });
             continue;
         }
         const item = { file, objectURL: URL.createObjectURL(file) };
@@ -1495,9 +1789,10 @@ function handleCombineFiles(fileList) {
 }
 
 // Extensions that can carry multiple frames/pages/layers — worth a server probe
-// so the card can badge "N frames". PNG is skipped: ImageMagick-6 reads it as
-// single-frame, so it never expands inside /convert.
-const MULTI_FRAME_EXTS = new Set(['.gif', '.webp', '.apng', '.tif', '.tiff', '.psd']);
+// so the card can badge "N frames". PNG is included: an animated PNG is often
+// named .png, and the server detects that from the bytes, so assuming a .png
+// is a single frame would badge an animation as a still.
+const MULTI_FRAME_EXTS = new Set(['.gif', '.webp', '.apng', '.png', '.tif', '.tiff', '.psd']);
 async function maybeInspectFrames(item) {
     const ext = ('.' + item.file.name.split('.').pop()).toLowerCase();
     if (!MULTI_FRAME_EXTS.has(ext)) return;
@@ -1511,32 +1806,41 @@ async function maybeInspectFrames(item) {
 }
 
 function clearCombineFiles() {
+    if (state.converting) { showToast('Wait for the current operation to finish.'); return; }
     state.files.forEach(item => URL.revokeObjectURL(item.objectURL));
     state.files = [];
 }
 
 function moveLeft(index) {
+    if (state.converting) { showToast('Wait for the current operation to finish.'); return; }
     if (index <= 0) return;
     [state.files[index - 1], state.files[index]] = [state.files[index], state.files[index - 1]];
     renderCards();
+    document.querySelector('[data-action="remove"][data-index="' + (index - 1) + '"]')?.focus();
 }
 
 function moveRight(index) {
+    if (state.converting) { showToast('Wait for the current operation to finish.'); return; }
     if (index >= state.files.length - 1) return;
     [state.files[index], state.files[index + 1]] = [state.files[index + 1], state.files[index]];
     renderCards();
+    document.querySelector('[data-action="remove"][data-index="' + (index + 1) + '"]')?.focus();
 }
 
 function removeFile(index) {
+    if (state.converting) { showToast('Wait for the current operation to finish.'); return; }
     if (index < 0 || index >= state.files.length) return;
     URL.revokeObjectURL(state.files[index].objectURL);
     state.files.splice(index, 1);
     renderCards();
     syncUI();
+    (document.querySelector('[data-action="remove"][data-index="' + Math.min(index, state.files.length - 1) + '"]') ||
+        document.getElementById('select-files-btn')).focus();
     if (state.files.length === 0) hideStatus();
 }
 
 function clearAll() {
+    if (state.converting) { showToast('Wait for the current operation to finish.'); return; }
     clearCombineFiles();
     clearExtractFile();
     clearConvertFiles();
@@ -1550,6 +1854,7 @@ function clearAll() {
 
 // ── Convert mode: batch handling (many stills → one format each) ───
 function handleConvertFiles(fileList) {
+    if (state.converting) { showToast('Wait for the current operation to finish.'); return; }
     if (!fileList || !fileList.length) return;
     clearRejected();
     let added = 0;
@@ -1558,14 +1863,18 @@ function handleConvertFiles(fileList) {
             state.rejected.push({ name: file.name, reason: 'Max of ' + getMaxFiles() + ' files reached (raise it in Settings).' });
             continue;
         }
-        const ext  = ('.' + file.name.split('.').pop()).toLowerCase();
-        const mime = (file.type || '').split(';')[0].trim().toLowerCase();
-        if (!ALLOWED_EXTS.has(ext) || (mime !== '' && !ALLOWED_TYPES.has(mime))) {
-            state.rejected.push({ name: file.name, reason: 'Unsupported type "' + ext + '". Accepted: JPG, PNG, APNG, WebP, RAW, TIFF, BMP, GIF, HEIC, PSD…' });
+        const wrongType = typeRejection(file);
+        if (wrongType) {
+            state.rejected.push({ name: file.name, reason: wrongType });
             continue;
         }
         if (file.size > MAX_BYTES) {
             state.rejected.push({ name: file.name, reason: 'Exceeds the ' + formatBytes(MAX_BYTES) + ' limit (' + formatBytes(file.size) + ').' });
+            continue;
+        }
+        const overQuota = quotaRejection(state.convertFiles, file);
+        if (overQuota) {
+            state.rejected.push({ name: file.name, reason: overQuota });
             continue;
         }
         const item = { file, objectURL: URL.createObjectURL(file), status: 'queued' };
@@ -1599,6 +1908,7 @@ async function enrichConvertMeta(item) {
 }
 
 function clearConvertFiles() {
+    if (state.converting) { showToast('Wait for the current operation to finish.'); return; }
     state.convertFiles.forEach(item => URL.revokeObjectURL(item.objectURL));
     state.convertFiles = [];
 }
@@ -1610,6 +1920,8 @@ function removeConvertFileAt(index) {
     state.convertFiles.splice(index, 1);
     renderConvertCards();
     syncUI();
+    (document.querySelector('[data-convert-remove="' + Math.min(index, state.convertFiles.length - 1) + '"]') ||
+        document.getElementById('select-files-btn')).focus();
     if (state.convertFiles.length === 0) hideStatus();
 }
 
@@ -1624,7 +1936,7 @@ function convertStatusChip(item) {
     const s = map[item.status] || map.queued;
     const spin = item.status === 'working' ? ' spin' : '';
     return '<div class="absolute top-sm right-sm px-sm py-xs rounded backdrop-blur-md border flex items-center gap-xs ' + s.cls + '">' +
-        '<span class="material-symbols-outlined text-[14px]' + spin + '">' + s.icon + '</span>' +
+        '<span aria-hidden="true" class="material-symbols-outlined text-[14px]' + spin + '">' + s.icon + '</span>' +
         '<span class="font-label-sm text-label-sm uppercase">' + s.label + '</span></div>';
 }
 
@@ -1638,7 +1950,7 @@ function renderConvertCards() {
     let anyDone = false;
     let html = '';
     state.convertFiles.forEach((item, index) => {
-        if (item.status === 'done') anyDone = true;
+        if (item.status === 'done' && item.resultName && !item.delivered) anyDone = true;
         const name  = escapeHtml(item.file.name);
         // Base meta (bytes / dims) upgrades to the output size once converted
         let meta = item.metaText || formatBytes(item.file.size);
@@ -1655,7 +1967,7 @@ function renderConvertCards() {
     <img class="w-full h-full object-cover" src="${item.objectURL}" alt="${name}"
          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
     <div class="w-full h-full items-center justify-center" style="display:none">
-      <span class="material-symbols-outlined text-primary text-[40px] opacity-30">image</span>
+      <span aria-hidden="true" class="material-symbols-outlined text-primary text-[40px] opacity-30">image</span>
     </div>
     ${convertStatusChip(item)}
   </div>
@@ -1664,16 +1976,16 @@ function renderConvertCards() {
       <h4 class="font-title-md text-body-lg text-on-surface truncate" title="${name}">${name}</h4>
       <p class="font-label-sm text-label-sm ${item.status === 'error' ? 'text-error' : 'text-on-surface-variant'}">${meta}</p>
     </div>
-    <div class="flex gap-sm pt-sm border-t border-outline-variant/10">
+    <div class="flex flex-wrap gap-sm pt-sm border-t border-outline-variant/10">
       ${item.status === 'done' && item.resultName
-        ? `<a href="/download/${encodeURIComponent(item.resultName)}" download="${escapeHtml(item.resultName)}"
-             class="flex-1 py-sm rounded-lg bg-tertiary text-on-tertiary font-bold hover:brightness-110 transition-all flex items-center justify-center gap-xs">
-             <span class="material-symbols-outlined text-[18px]">download</span>
-             <span class="font-label-md text-label-md">Download</span></a>`
+        ? `<button data-convert-download="${index}" ${item.delivered ? 'disabled' : ''}
+             class="flex-1 py-sm rounded-lg bg-tertiary text-on-tertiary font-bold hover:brightness-110 transition-all flex items-center justify-center gap-xs disabled:opacity-50 disabled:pointer-events-none">
+             <span aria-hidden="true" class="material-symbols-outlined text-[18px]">${item.delivered ? 'check' : 'download'}</span>
+             <span class="font-label-md text-label-md">${item.delivered ? 'Downloaded' : 'Download'}</span></button><button data-convert-compare="${index}" ${item.delivered ? 'disabled' : ''} class="p-sm rounded-lg glass-card">Compare</button>`
         : `<span class="flex-1"></span>`}
-      <button data-convert-remove="${index}" ${removable ? '' : 'disabled'}
+      <button aria-label="Remove image" data-convert-remove="${index}" ${removable ? '' : 'disabled'}
         class="p-sm rounded-lg glass-card border-error/20 text-error hover:bg-error/10 transition-colors disabled:opacity-30 disabled:pointer-events-none">
-        <span class="material-symbols-outlined text-[18px]">delete</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">delete</span>
       </button>
     </div>
   </div>
@@ -1686,6 +1998,7 @@ function renderConvertCards() {
 
 // ── Extract mode: single-file handling ───────────
 function handleExtractFile(fileList) {
+    if (state.converting) { showToast('Wait for the current operation to finish.'); return; }
     if (!fileList || !fileList.length) return;
     clearRejected();
     const file = fileList[0];  // extract operates on exactly one file
@@ -1738,6 +2051,7 @@ async function enrichExtractMeta(item) {
 }
 
 function clearExtractFile() {
+    if (state.converting) { showToast('Wait for the current operation to finish.'); return; }
     if (state.extractFile) {
         URL.revokeObjectURL(state.extractFile.objectURL);
         state.extractFile = null;
@@ -1745,6 +2059,7 @@ function clearExtractFile() {
 }
 
 function removeExtractFile() {
+    if (state.converting) { showToast('Wait for the current operation to finish.'); return; }
     clearExtractFile();
     renderExtractCard();
     syncUI();
@@ -1762,6 +2077,7 @@ function renderExtractCard() {
     if (!item) { card.hidden = true; return; }
     card.hidden = false;
     document.getElementById('extract-file-name').textContent = item.file.name;
+    document.getElementById('extract-file-name').title = item.file.name;
     const meta = document.getElementById('extract-file-meta');
     meta.textContent = formatBytes(item.file.size);
     meta.style.color = '';  // clear any frame-limit warning from a previous file
@@ -1818,7 +2134,7 @@ function renderCards() {
     </div>
     <div class="absolute top-sm right-sm w-6 h-6 rounded-full bg-black/40 border border-white/10
                 flex items-center justify-center backdrop-blur-sm cursor-move" title="Drag to reorder">
-      <span class="material-symbols-outlined text-[14px] text-on-surface-variant">drag_indicator</span>
+      <span aria-hidden="true" class="material-symbols-outlined text-[14px] text-on-surface-variant">drag_indicator</span>
     </div>
     ${frameBadge}
   </div>
@@ -1828,25 +2144,25 @@ function renderCards() {
       <p class="font-label-sm text-label-sm text-on-surface-variant">${size}${dimStr}</p>
     </div>
     <label class="flex items-center gap-xs" title="${delayTitle}">
-      <span class="material-symbols-outlined text-[16px] text-on-surface-variant">timer</span>
+      <span aria-hidden="true" class="material-symbols-outlined text-[16px] text-on-surface-variant">timer</span>
       <input type="number" data-delay-index="${index}" value="${delayVal}" placeholder="global" min="1" max="10000" step="10" ${animated ? 'disabled' : ''}
         class="w-20 bg-surface-container-lowest/60 border border-outline-variant/20 rounded px-sm py-xs text-on-surface text-label-sm focus:outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-30"/>
       <span class="font-label-sm text-label-sm text-on-surface-variant">ms</span>
     </label>
-    <div class="mt-auto flex gap-sm pt-sm border-t border-outline-variant/10">
-      <button data-action="move-left" data-index="${index}" ${isFirst ? 'disabled' : ''}
+    <div class="mt-auto flex flex-wrap gap-sm pt-sm border-t border-outline-variant/10">
+      <button aria-label="Move frame left" data-action="move-left" data-index="${index}" ${isFirst ? 'disabled' : ''}
         class="flex-1 py-sm rounded-lg glass-card border-primary/20 text-primary hover:bg-primary/10
                transition-colors flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none">
-        <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">chevron_left</span>
       </button>
-      <button data-action="move-right" data-index="${index}" ${isLast ? 'disabled' : ''}
+      <button aria-label="Move frame right" data-action="move-right" data-index="${index}" ${isLast ? 'disabled' : ''}
         class="flex-1 py-sm rounded-lg glass-card border-primary/20 text-primary hover:bg-primary/10
                transition-colors flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none">
-        <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">chevron_right</span>
       </button>
-      <button data-action="remove" data-index="${index}"
+      <button aria-label="Remove frame" data-action="remove" data-index="${index}"
         class="p-sm rounded-lg glass-card border-error/20 text-error hover:bg-error/10 transition-colors">
-        <span class="material-symbols-outlined text-[18px]">delete</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">delete</span>
       </button>
     </div>
   </div>
@@ -1916,7 +2232,7 @@ function resBtn(w, h, mode, icon, label, title) {
     return '<button type="button" data-resw="' + w + '" data-resh="' + h + '" data-resmode="' + mode +
         '" title="' + title + '" class="px-md py-xs rounded-lg glass-card border-primary/20 text-primary ' +
         'font-label-md text-label-md hover:bg-primary/10 transition-colors flex items-center gap-xs">' +
-        '<span class="material-symbols-outlined text-[16px]">' + icon + '</span>' + label + '</button>';
+        '<span aria-hidden="true" class="material-symbols-outlined text-[16px]">' + icon + '</span>' + label + '</button>';
 }
 
 async function updateResolutionSummary() {
@@ -1937,7 +2253,7 @@ async function updateResolutionSummary() {
     if (measured.length === 0) {
         wrap.hidden = false;
         textEl.textContent = state.files.length + (state.files.length === 1 ? ' file' : ' files') +
-            ' added. Pixel size can\'t be read in the browser for these formats (e.g. RAW/HEIC); they\'ll be combined at their original size.';
+            ' added. Pixel sizes are unavailable here; the server will measure frames before choosing the animation canvas.';
         actEl.innerHTML = '';
         return;
     }
@@ -1945,23 +2261,23 @@ async function updateResolutionSummary() {
     const byArea = measured.slice().sort((a, b) => (a.w * a.h) - (b.w * b.h));
     const small  = byArea[0];
     const large  = byArea[byArea.length - 1];
-    const mixed  = !(small.w === large.w && small.h === large.h);
+    const mixed  = measured.some(f => f.w !== small.w || f.h !== small.h);
     const dim    = f => f.w + '×' + f.h;
 
     let txt = state.files.length + (state.files.length === 1 ? ' frame · ' : ' frames · ');
     txt += mixed
-        ? ('sizes range ' + dim(small) + ' to ' + dim(large) + '. Mixed sizes — pick one target below so every frame matches.')
+        ? ('sizes include ' + dim(small) + ' and ' + dim(large) + '. Animation/video frames share a padded canvas; TIFF/PDF pages keep their sizes.')
         : ('all ' + dim(small) + '. Already uniform; resizing is optional.');
     if (unmeasured > 0) txt += ' (' + unmeasured + ' couldn\'t be measured here.)';
     textEl.textContent = txt;
 
-    let html = resBtn(small.w, small.h, 'fit', 'photo_size_select_small',
-        'Match smallest ' + dim(small), 'Downscale everything to the smallest frame: sharpest per pixel, smallest file. Uses Fit (shrink-only).');
+    let html = resBtn(small.w, small.h, 'pad', 'photo_size_select_small',
+        'Match smallest ' + dim(small), 'Fit each whole image into this exact canvas with padding. May resize images; use Crop to fill instead.');
     if (mixed) {
         html += resBtn(large.w, large.h, 'pad', 'photo_size_select_large',
-            'Match largest ' + dim(large), 'Scale everything up to the largest frame: most detail, larger file. Switches resize mode to Exact (pad).');
+            'Match largest ' + dim(large), 'Fit each whole image into this exact canvas with padding. Smaller images may be enlarged.');
     }
-    html += '<button type="button" data-resw="" data-resh="" data-resmode="fit" title="Combine each frame at its own original size." ' +
+    html += '<button type="button" data-resw="" data-resh="" data-resmode="fit" title="Keep image sizes; animation/video frames are centered on one shared canvas. Document pages stay independent." ' +
         'class="px-md py-xs rounded-lg glass-card text-on-surface-variant font-label-md text-label-md hover:bg-white/5 transition-colors">Keep originals</button>';
     actEl.innerHTML = html;
     wrap.hidden = false;
@@ -1978,7 +2294,7 @@ function applyResolution(w, h, mode) {
     wEl.dispatchEvent(new Event('change'));
     hEl.dispatchEvent(new Event('change'));
     if (mEl) mEl.dispatchEvent(new Event('change'));
-    showToast(w ? ('Target size set to ' + w + '×' + h) : 'Cleared — keeping original sizes');
+    showToast(w ? ('Target size set to ' + w + '×' + h) : 'Cleared — keeping image sizes inside the output canvas');
 }
 
 document.getElementById('resolution-summary-actions').addEventListener('click', e => {
@@ -1989,7 +2305,7 @@ document.getElementById('resolution-summary-actions').addEventListener('click', 
 
 // Resize-mode hint (explains the selected mode; see 3c)
 const RESIZE_HINTS = {
-    fit:     'Shrink large frames to fit; never enlarge. Safest for sharpness.',
+    fit:     'Width/Height are bounds: shrink large images to fit, never enlarge. Animation/video frames are then centered on one shared canvas.',
     pad:     'Force exact size, padding with the background so the whole frame is kept (may add bars).',
     crop:    'Force exact size, cropping the edges to fill. No bars, but edges are lost.',
     stretch: 'Force exact size, may distort. Use only if all frames already share an aspect ratio.',
@@ -1997,10 +2313,95 @@ const RESIZE_HINTS = {
 const resizeModeSel = document.getElementById('setting-resize-mode');
 function updateResizeHint() {
     const el = document.getElementById('resize-mode-hint-text');
-    if (el) el.textContent = RESIZE_HINTS[resizeModeSel.value] || '';
+    if (!el) return;
+    const fmt = document.getElementById('setting-format').value;
+    const documents = ['tiff', 'pdf'].includes(fmt);
+    const background = document.getElementById('setting-background').value.trim();
+    el.textContent = (RESIZE_HINTS[resizeModeSel.value] || '') + (documents
+        ? ' Original-size TIFF/PDF keep each page size; fixed PDF pages use the page layout below.'
+        : (' Padding: ' + (background || (fmt === 'mp4' ? 'black (opaque)' : 'transparent')) + '.' +
+           (fmt === 'mp4' ? ' Odd canvas sizes gain a right/bottom pixel.' : '')));
 }
 resizeModeSel.addEventListener('change', updateResizeHint);
 updateResizeHint();
+
+const PDF_FIELDS = ['page-size', 'orientation', 'width-mm', 'height-mm', 'margin-mm', 'fit'];
+function pdfLayoutValues(prefix) {
+    const value = key => document.getElementById(prefix + '-pdf-' + key).value;
+    const size = value('page-size');
+    if (size === 'original') return null;
+    const sides = size === 'a4' ? [210, 297] : size === 'letter' ? [215.9, 279.4] : [Number(value('width-mm')), Number(value('height-mm'))];
+    const margin = Number(value('margin-mm')), mode = value('fit');
+    if (!['a4', 'letter', 'custom'].includes(size) || !['fit', 'crop'].includes(mode) ||
+        sides.some(n => !Number.isFinite(n) || n < 50 || n > 600) ||
+        !Number.isFinite(margin) || margin < 0 || margin > 100 || Math.min(...sides) - 2 * margin < 1 ||
+        ['margin-mm', ...(size === 'custom' ? ['width-mm', 'height-mm'] : [])].some(key => !value(key).trim()))
+        throw new Error('Use page sides 50–600 mm and a margin of 0–100 mm leaving at least 1 mm inside.');
+    sides.sort((a, b) => a - b);
+    if (value('orientation') === 'landscape') sides.reverse();
+    const px = n => Math.round(n * 144 / 25.4);
+    return {width: px(sides[0]), height: px(sides[1]), margin: px(margin), mode};
+}
+function validatePDFLayout(prefix) {
+    if (document.getElementById(prefix + '-format').value !== 'pdf') return true;
+    try { pdfLayoutValues(prefix); return true; }
+    catch (error) {
+        const message = document.getElementById(prefix + '-pdf-message');
+        message.textContent = error.message;
+        document.getElementById(prefix + '-pdf-margin-mm').focus();
+        return false;
+    }
+}
+function appendPDFLayout(data, prefix) {
+    if (document.getElementById(prefix + '-format').value !== 'pdf') return;
+    for (const key of PDF_FIELDS) {
+        const input = document.getElementById(prefix + '-pdf-' + key);
+        if (!input.disabled) data.append('pdf_' + key.replaceAll('-', '_'), input.value);
+    }
+}
+function updatePDFLayout(prefix) {
+    const panel = document.getElementById(prefix + '-pdf-panel');
+    const active = document.getElementById(prefix + '-format').value === 'pdf';
+    panel.hidden = !active;
+    if (!active) return;
+    const size = document.getElementById(prefix + '-pdf-page-size').value;
+    for (const key of PDF_FIELDS.slice(1)) {
+        const input = document.getElementById(prefix + '-pdf-' + key);
+        input.disabled = size === 'original' || (['width-mm', 'height-mm'].includes(key) && size !== 'custom');
+        if (['width-mm', 'height-mm'].includes(key)) input.parentElement.hidden = size !== 'custom';
+    }
+    const canvas = document.getElementById(prefix + '-pdf-preview');
+    const message = document.getElementById(prefix + '-pdf-message');
+    const token = (canvas._pdfToken || 0) + 1; canvas._pdfToken = token;
+    canvas.hidden = true;
+    let layout;
+    try { layout = pdfLayoutValues(prefix); }
+    catch (error) { message.textContent = error.message; return; }
+    if (!layout) { message.textContent = 'Each page keeps its image size. Choose a fixed page size to set printable margins.'; return; }
+    message.textContent = (layout.width * 25.4 / 144).toFixed(1) + ' × ' + (layout.height * 25.4 / 144).toFixed(1) + ' mm · white paper';
+    const first = prefix === 'setting' ? state.files[0]?.objectURL : (reconvertTarget ? '/compare-preview/' + encodeURIComponent(reconvertTarget) : null);
+    canvas.width = 240; canvas.height = Math.round(240 * layout.height / layout.width);
+    const ctx = canvas.getContext('2d'), scale = 240 / layout.width;
+    ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    canvas.hidden = false;
+    if (!first) return;
+    const img = new Image();
+    img.onload = () => {
+        if (canvas._pdfToken !== token) return;
+        const x = layout.margin * scale, y = x;
+        const w = (layout.width - 2 * layout.margin) * scale, h = (layout.height - 2 * layout.margin) * scale;
+        const ratio = Math[layout.mode === 'crop' ? 'max' : 'min'](w / img.width, h / img.height);
+        ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+        ctx.drawImage(img, x + (w - img.width * ratio) / 2, y + (h - img.height * ratio) / 2, img.width * ratio, img.height * ratio);
+        ctx.restore();
+    };
+    img.onerror = () => { if (canvas._pdfToken === token) message.textContent += ' · Image preview unavailable; page geometry is shown.'; };
+    img.src = first;
+}
+for (const prefix of ['setting', 'reconvert']) {
+    document.getElementById(prefix + '-format').addEventListener('change', () => updatePDFLayout(prefix));
+    for (const key of PDF_FIELDS) document.getElementById(prefix + '-pdf-' + key).addEventListener('input', () => updatePDFLayout(prefix));
+}
 
 // ════════════════════════════════════════════════
 // PRESETS (one-click profiles)
@@ -2030,8 +2431,8 @@ function renderPresetRow() {
             '<button type="button" data-user-preset="' + i + '" title="Apply preset" ' +
             'class="preset-user-btn px-md py-xs rounded-lg glass-card border-secondary/30 text-secondary ' +
             'font-label-md text-label-md hover:bg-secondary/10 transition-colors">' + escapeHtml(name) + '</button>' +
-            '<span data-del-preset="' + i + '" title="Delete preset" ' +
-            'class="preset-del material-symbols-outlined">close</span>' +
+            '<button type="button" aria-label="Delete preset" data-del-preset="' + i + '" title="Delete preset" ' +
+            'class="preset-del"><span aria-hidden="true" class="material-symbols-outlined">close</span></button>' +
         '</span>';
     });
     html += '<button type="button" id="save-preset-btn" title="Save the current Combine settings as a preset" ' +
@@ -2093,7 +2494,7 @@ function saveUserPreset() {
     state.userPresets[name] = snap;
     renderPresetRow();
     persistSettings();
-    showToast('Preset saved: ' + name);
+    showToast('Preset updated locally; saving…');
 }
 
 function deleteUserPreset(name) {
@@ -2102,7 +2503,8 @@ function deleteUserPreset(name) {
     delete state.userPresets[name];
     renderPresetRow();
     persistSettings();
-    showToast('Preset deleted');
+    document.getElementById('preset-row').querySelector('button')?.focus();
+    showToast('Preset removed locally; saving…');
 }
 
 // ════════════════════════════════════════════════
@@ -2112,13 +2514,17 @@ let _previewTimer = null, _previewIdx = 0;
 function stopTimingPreview() { if (_previewTimer) { clearInterval(_previewTimer); _previewTimer = null; } }
 function updateTimingPreview() {
     stopTimingPreview();
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.getElementById('timing-preview-wrap').hidden = true;
+        return;
+    }
     const wrap = document.getElementById('timing-preview-wrap');
     const img  = document.getElementById('timing-preview-img');
     const info = document.getElementById('timing-preview-info');
     if (!wrap) return;
     if (state.mode !== 'combine' || state.files.length === 0) { wrap.hidden = true; return; }
     const frames = state.files.slice(0, 12).map(f => f.objectURL);
-    const delay  = Math.max(20, parseInt(document.getElementById('setting-delay').value, 10) || 100);
+    const delay  = Math.max(20, readNumericField('setting-delay'));
     wrap.hidden = false;
     info.textContent = '(' + delay + ' ms ≈ ' + (1000 / delay).toFixed(1) + ' fps)';
     _previewIdx = 0;
@@ -2129,7 +2535,7 @@ function updateTimingPreview() {
 function updateDelayHint() {
     const el = document.getElementById('delay-fps-hint');
     if (!el) return;
-    const d = Math.max(1, parseInt(document.getElementById('setting-delay').value, 10) || 100);
+    const d = Math.max(1, readNumericField('setting-delay'));
     el.textContent = d + ' ms ≈ ' + (1000 / d).toFixed(1) + ' fps';
 }
 document.getElementById('setting-delay').addEventListener('input', () => { updateTimingPreview(); updateDelayHint(); });
@@ -2193,12 +2599,22 @@ function _outputDims(w, h, W, H, mode) {
     return { w, h };  // no target → original size
 }
 
+function animationCanvas(dims, fmt) {
+    if (!['gif', 'webp', 'apng', 'mp4', 'webm'].includes(fmt) || !dims.length) return null;
+    let w = Math.max(...dims.map(d => Math.max(1, d.w)));
+    let h = Math.max(...dims.map(d => Math.max(1, d.h)));
+    if (fmt === 'mp4') { w += w % 2; h += h % 2; }
+    return {w, h};
+}
+
 function _estRange(lo, hi) {
     if (hi < 1024 * 1024) return Math.round(lo / 1024) + '–' + Math.round(hi / 1024) + ' KB';
     return (lo / 1048576).toFixed(1) + '–' + (hi / 1048576).toFixed(1) + ' MB';
 }
 
 function updateSizeEstimate() {
+    updatePDFLayout('setting');
+    updateResizeHint();
     const el = document.getElementById('size-estimate');
     if (!el) return;
     if (state.mode !== 'combine' || state.files.length === 0) { el.textContent = ''; return; }
@@ -2207,29 +2623,33 @@ function updateSizeEstimate() {
     if (!measured.length) { el.textContent = ''; return; }  // RAW/HEIC etc: can't estimate
 
     const fmt     = document.getElementById('setting-format').value;
-    const quality = parseInt(document.getElementById('setting-quality').value, 10) || 85;
-    const colors  = parseInt(document.getElementById('setting-colors').value, 10) || 256;
+    const quality = readNumericField('setting-quality');
+    const colors  = readNumericField('setting-colors');
     const mode    = document.getElementById('setting-resize-mode').value;
     const boom    = document.getElementById('setting-boomerang').checked;
-    const W = parseInt(document.getElementById('setting-width').value, 10)  || 0;
-    const H = parseInt(document.getElementById('setting-height').value, 10) || 0;
+    const W = readNumericField('setting-width', 0);
+    const H = readNumericField('setting-height', 0);
 
     const bpp = _bppFor(fmt, quality, colors);
     if (bpp == null) { el.textContent = ''; return; }
 
-    // Average output area over measured frames; representative dims from the
-    // largest source frame. Unmeasured frames are assumed ~average.
-    const dims = measured.map(f => _outputDims(f.w, f.h, W, H, mode));
-    const avgArea = dims.reduce((a, d) => a + d.w * d.h, 0) / dims.length;
+    // Estimate the same post-transform canvas the server will verify. Multi-page
+    // inputs can have unmeasured pages, so this remains an explicit estimate.
+    const rotate = readNumericField('setting-rotate', 0);
+    const swap = rotate === 90 || rotate === 270;
+    const dims = measured.map(f => _outputDims(swap ? f.h : f.w, swap ? f.w : f.h, W, H, mode));
+    const canvas = animationCanvas(dims, fmt);
+    const avgArea = canvas ? canvas.w * canvas.h : dims.reduce((a, d) => a + d.w * d.h, 0) / dims.length;
     let repIdx = 0, maxA = 0;
     measured.forEach((f, i) => { const a = f.w * f.h; if (a > maxA) { maxA = a; repIdx = i; } });
-    const rep = dims[repIdx];
+    const rep = canvas || dims[repIdx];
 
     let frameCount = state.files.length;
     if (boom && frameCount > 2) frameCount = 2 * frameCount - 2;  // mirror factor
 
     const bytes = frameCount * avgArea * bpp;
-    el.textContent = 'Output ≈ ' + rep.w + '×' + rep.h + ' · est. ' + _estRange(bytes * 0.6, bytes * 1.4);
+    el.textContent = (canvas ? 'Shared canvas ≈ ' : 'Representative page ≈ ') + rep.w + '×' + rep.h +
+        ' · est. ' + _estRange(bytes * 0.6, bytes * 1.4);
 }
 
 // Recompute on any input that affects the estimate
@@ -2237,10 +2657,11 @@ function updateSizeEstimate() {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', updateSizeEstimate);
 });
-['setting-format', 'setting-resize-mode', 'setting-boomerang'].forEach(id => {
+['setting-format', 'setting-resize-mode', 'setting-boomerang', 'setting-rotate'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('change', updateSizeEstimate);
 });
+document.getElementById('setting-background').addEventListener('input', updateResizeHint);
 
 // ════════════════════════════════════════════════
 // DRAG-TO-REORDER + PER-FRAME DELAY (combine cards)
@@ -2259,6 +2680,7 @@ cardsGridEl.addEventListener('dragstart', e => {
 cardsGridEl.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
 cardsGridEl.addEventListener('drop', e => {
     e.preventDefault();
+    if (state.converting) { _dragIndex = null; return; }
     const card = e.target.closest('[data-card-index]');
     if (!card || _dragIndex === null) { _dragIndex = null; return; }
     const to = parseInt(card.dataset.cardIndex, 10);
@@ -2354,7 +2776,7 @@ formatSelect.addEventListener('change', () => {
 // and the button wiring all read from this registry.
 // ════════════════════════════════════════════════
 // Fallback only — MODES.*.accept is overwritten from GET /config after load
-const ALL_INPUT_ACCEPT = '.jpg,.jpeg,.png,.apng,.webp,.gif,.bmp,.tga,.tif,.tiff,.psd,.heic,.heif,.cr2,.cr3,.nef,.arw,.dng,.raf,.orf,.rw2,.pef,.srw';
+const ALL_INPUT_ACCEPT = '.jpg,.jpeg,.png,.apng,.webp,.gif,.bmp,.tga,.tif,.tiff,.psd,.heic,.heif,.avif,.cr2,.cr3,.nef,.arw,.dng,.raf,.orf,.rw2,.pef,.srw';
 
 const MODES = {
     combine: {
@@ -2399,6 +2821,9 @@ const MODES = {
 };
 
 function setMode(mode) {
+    mode = MODES[mode] ? mode : 'combine';
+    if (state.mode === mode && state.modeInitialized) return;
+    state.modeInitialized = true;
     state.mode = MODES[mode] ? mode : 'combine';
     const cfg = MODES[state.mode];
 
@@ -2407,7 +2832,7 @@ function setMode(mode) {
         const b = document.getElementById(MODES[name].btn);
         if (!b) continue;
         const active = name === state.mode;
-        b.setAttribute('aria-selected', active ? 'true' : 'false');
+        b.setAttribute('aria-pressed', active ? 'true' : 'false');
         b.classList.toggle('fmt-active', active);
         b.classList.toggle('fmt-inactive', !active);
     }
@@ -2421,11 +2846,8 @@ function setMode(mode) {
     fileInput.multiple = cfg.multi;
     fileInput.setAttribute('accept', cfg.accept);
 
-    // Switching directions clears every mode's in-progress work so flows never mix
-    for (const name in MODES) { MODES[name].clear(); MODES[name].render(); }
-    clearRejected();
-    hideStatus();
-    hideDownload();
+    // Navigation preserves drafts and the active operation's progress/results.
+    for (const name in MODES) MODES[name].render();
     syncUI();
 }
 
@@ -2453,7 +2875,7 @@ async function startExtract() {
 
     const btn       = document.getElementById('extract-btn');
     const outFormat = document.getElementById('extract-format').value;
-    const quality   = parseInt(document.getElementById('extract-quality').value, 10) || 92;
+    const quality   = readNumericField('extract-quality', 92);
     // Optional frame selection — only sent when the user set a non-default value,
     // so an untouched form behaves exactly as before (every frame).
     const startVal  = document.getElementById('extract-start').value.trim();
@@ -2510,8 +2932,59 @@ async function startExtract() {
 }
 
 document.getElementById('extract-edit-btn').addEventListener('click', () => {
-    if (state.extractFile) editInCombine({ file: state.extractFile.file, name: state.extractFile.file.name });
+    if (!state.extractFile) return;
+    // Edit what was just extracted, not the whole source: this button sits
+    // under a range the user has already chosen.
+    editInCombine(
+        { file: state.extractFile.file, name: state.extractFile.file.name },
+        {
+            start: document.getElementById('extract-start').value.trim(),
+            end:   document.getElementById('extract-end').value.trim(),
+            step:  document.getElementById('extract-step').value.trim(),
+        });
 });
+
+// Settings that change the picture. Editing an existing animation must start
+// from these: the frames are already rendered, so a rotation or a colour shift
+// left over from a previous session would be applied a second time.
+const IDENTITY_TRANSFORMS = {
+    'setting-rotate': '0', 'setting-flip': false, 'setting-flop': false,
+    'setting-brightness': '100', 'setting-saturation': '100', 'setting-hue': '100',
+    'setting-grayscale': false, 'setting-negate': false, 'setting-sepia': false,
+    'setting-auto-level': false, 'setting-normalize': false,
+    'setting-sharpen': '0', 'setting-blur': '0',
+    'setting-width': '', 'setting-height': '', 'setting-resize-mode': 'fit',
+    'setting-background': '', 'setting-boomerang': false,
+};
+
+function resetTransformsToIdentity() {
+    for (const [id, value] of Object.entries(IDENTITY_TRANSFORMS)) {
+        const control = document.getElementById(id);
+        if (!control) continue;
+        if (typeof value === 'boolean') control.checked = value;
+        else control.value = value;
+        control.dispatchEvent(new Event('change', { bubbles: true }));
+        if (control.type === 'range' || control.type === 'number') {
+            control.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }
+}
+
+// How many frames Combine can hold. The server's cap is the real ceiling; the
+// Settings value is only the user's own, lower, preference.
+function editorFrameCapacity() {
+    return (CONFIG && Number.isFinite(CONFIG.max_files)) ? CONFIG.max_files : 60;
+}
+
+// The frames a start/end/step selection actually names, given how many exist.
+// Mirrors the server's slice so the browser and the server agree on the count
+// before anything is decoded.
+function selectionCount(total, start, end, step) {
+    if (!total) return 0;
+    const last = (end === null || end === undefined) ? total - 1 : Math.min(end, total - 1);
+    if (start > last) return 0;
+    return Math.floor((last - start) / step) + 1;
+}
 
 // ════════════════════════════════════════════════
 // EDIT IN COMBINE — open a stored/extracted animation as editable frames
@@ -2567,7 +3040,7 @@ async function parseZip(arrayBuffer) {
 
 // source: { name, file? } — if `file` is present it is exploded directly (no
 // re-download); otherwise the stored output `name` is fetched from /download.
-async function editInCombine(source) {
+async function editInCombine(source, selection = {}) {
     if (state.converting) return;
     const filename = source.name;
     const ext = ('.' + filename.split('.').pop()).toLowerCase();
@@ -2576,7 +3049,8 @@ async function editInCombine(source) {
         return;
     }
 
-    showStatus('Loading frames from "' + filename + '"…', 'info');
+    state.converting = true;
+    showStatus('Reading "' + filename + '"…', 'info');
     setHeaderConverting(true);
     try {
         // Obtain the source File (reuse the extract File, else download the output)
@@ -2587,10 +3061,46 @@ async function editInCombine(source) {
             file = new File([await dl.blob()], filename);
         }
 
-        // Split into PNG frames via the existing endpoint
+        // Ask what the source is BEFORE decoding it. This is what makes the
+        // size question answerable in advance, and it is where the timing and
+        // loop count come from — a ZIP of PNGs carries neither.
+        const info = await inspectFile(file);
+        const total = (info && info.frames) || 0;
+
+        const start = Math.max(0, parseInt(selection.start, 10) || 0);
+        const step  = Math.max(1, parseInt(selection.step, 10) || 1);
+        const end   = Number.isFinite(parseInt(selection.end, 10))
+            ? parseInt(selection.end, 10) : null;
+
+        let wanted = selectionCount(total, start, end, step);
+        const capacity = editorFrameCapacity();
+        let lastWanted = end;
+        if (total && wanted > capacity) {
+            // Say so before doing the expensive work, and let the session stand
+            // if the answer is no. Truncating after the download is what made
+            // this silently lose frames.
+            const proceed = confirm(
+                '"' + filename + '" has ' + wanted + ' frames in the selected range, ' +
+                'and Combine can edit ' + capacity + ' at a time.\n\n' +
+                'OK: edit the first ' + capacity + ' of them.\n' +
+                'Cancel: keep your current work and choose a narrower range in Extract.');
+            if (!proceed) {
+                showStatus('Edit cancelled — your current work is untouched.', 'info');
+                return;
+            }
+            lastWanted = start + (capacity - 1) * step;
+            wanted = capacity;
+        }
+
+        showStatus('Loading frames from "' + filename + '"…', 'info');
+
+        // Decode exactly the frames being edited, not the whole source.
         const fd = new FormData();
         fd.append('file', file, filename);
         fd.append('out_format', 'png');
+        fd.append('start', String(start));
+        fd.append('step', String(step));
+        if (lastWanted !== null && lastWanted !== undefined) fd.append('end', String(lastWanted));
         const res = await fetch('/explode', { method: 'POST', body: fd });
         if (!res.ok) {
             let detail = 'Could not split the file into frames.';
@@ -2600,27 +3110,38 @@ async function editInCombine(source) {
 
         const entries = await parseZip(await res.arrayBuffer());
         if (!entries.length) throw new Error('No frames were produced.');
-        // Original order: arcnames are zero-padded (frame_00000…), so name sort = frame order
-        entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+        // Original order comes from the numbers in the names, not the text:
+        // sorting as text only matches the frame order while every name is the
+        // same width, and an archive from another tool need not be padded at all.
+        entries.sort((a, b) => compareFrameNames(a.name, b.name));
         const frames = entries.map(en => new File([en.bytes], en.name, { type: 'image/png' }));
 
-        // Raise the Max Files ceiling if needed so a whole animation fits (up to
-        // the backend cap); anything beyond that is surfaced by the cap/reject path.
-        const backendMax = (CONFIG && Number.isFinite(CONFIG.max_files)) ? CONFIG.max_files : 60;
+        if (frames.some(file => typeRejection(file) || file.size > MAX_BYTES) ||
+            totalBytes(frames) > MAX_TOTAL_BYTES)
+            throw new Error('Decoded frames exceed the upload limits; your previous draft is unchanged.');
+
+        // Raise the Max Files ceiling so the frames just decoded all fit. They
+        // are already within the backend cap, because that is what the question
+        // above was about.
         if (frames.length > getMaxFiles()) {
-            const raised = Math.min(frames.length, backendMax);
             const mf = document.getElementById('setting-max-files');
-            if (mf && raised > parseInt(mf.value, 10)) {
-                mf.value = String(raised);
+            if (mf && frames.length > parseInt(mf.value, 10)) {
+                mf.value = String(Math.min(frames.length, editorFrameCapacity()));
                 mf.dispatchEvent(new Event('change'));  // persist + apply
-                showToast('Raised Max Files to ' + raised + ' for editing.');
+                showToast('Raised Max Files to ' + mf.value + ' for editing.');
             }
         }
 
-        // Load into a clean Combine session (setMode clears prior work)
+        // Everything that could fail has now succeeded, so the session can be
+        // replaced: until this point the user's work is still theirs.
         showView('dashboard');
+        // Commit only after decoding succeeds; guarded mutations are synchronous.
+        state.converting = false;
+        clearCombineFiles();
         setMode('combine');
+        resetTransformsToIdentity();
         handleCombineFiles(frames);
+        applySourceTiming(info, { start, step, count: frames.length });
 
         // Prefill the output name with the source stem + _edit
         const stem = filename.replace(/\.[^.]+$/, '');
@@ -2634,9 +3155,38 @@ async function editInCombine(source) {
         showStatus(err.message || 'Could not open the file for editing.', 'error');
         showToast('Edit failed', 'error');
     } finally {
+        state.converting = false;
         setHeaderConverting(false);
     }
 }
+
+// Carry the source's own rhythm and loop count onto the imported frames. A ZIP
+// of stills has no timing, so without this an edited animation silently adopted
+// whatever global delay happened to be in the panel.
+function applySourceTiming(info, selection) {
+    if (!info) return;
+    const delays = Array.isArray(info.delays_cs) ? info.delays_cs : [];
+    let applied = 0;
+    for (let i = 0; i < selection.count && i < state.files.length; i++) {
+        const sourceIndex = selection.start + i * selection.step;
+        const centiseconds = delays[sourceIndex];
+        if (Number.isFinite(centiseconds) && centiseconds > 0) {
+            state.files[i].delay = centiseconds * 10;   // the panel works in ms
+            applied++;
+        }
+    }
+    if (applied) {
+        renderCards();
+        showToast('Kept the source timing for ' + applied + ' frame' + (applied === 1 ? '' : 's'));
+    }
+    // null means "this build could not read it", which is not a loop count.
+    const loopInput = document.getElementById('setting-loop');
+    if (loopInput && Number.isFinite(info.loop)) {
+        loopInput.value = String(info.loop);
+        loopInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+}
+
 
 // ════════════════════════════════════════════════
 // CONVERT IMAGE FLOW (still → still)
@@ -2645,25 +3195,62 @@ const STILL_LOSSY = new Set(['jpg', 'webp', 'avif', 'heic']);
 const convertFormat = document.getElementById('convert-format');
 function updateConvertFormatUI() {
     const fmt = convertFormat.value;
+    const icon = fmt === 'ico';
+    document.getElementById('convert-icon-wrap').hidden = !icon;
+    document.getElementById('convert-width').disabled = icon;
+    document.getElementById('convert-height').disabled = icon;
     document.getElementById('convert-quality-wrap').style.display = STILL_LOSSY.has(fmt) ? '' : 'none';
     document.getElementById('convert-ext').textContent = '.' + fmt;
+    const hint = document.getElementById('convert-color-hint');
+    const consequence = {
+        jpg: 'Transparency becomes white.', bmp: 'Transparency becomes white.',
+        png: 'Transparency and up to 16-bit precision are retained.',
+        webp: 'Transparency is supported; output uses 8-bit color.',
+        ico: 'One 8-bit RGBA icon. Fits into the selected square with transparent padding; small sources may be enlarged.',
+    }[fmt] || 'Color precision and transparency depend on the selected encoder.';
+    if (hint) hint.textContent = 'Exports respect photo orientation and convert tagged SDR colors to sRGB. ' + consequence;
+
 }
 convertFormat.addEventListener('change', updateConvertFormatUI);
 updateConvertFormatUI();
 
 document.getElementById('convert-image-btn').addEventListener('click', startConvertAll);
 document.getElementById('convert-clear-all-btn').addEventListener('click', () => {
+    if (state.converting) { showToast('Wait for the current operation to finish.'); return; }
     clearConvertFiles(); renderConvertCards(); syncUI(); hideStatus(); hideDownload();
 });
 document.getElementById('convert-download-all-btn').addEventListener('click', downloadAllConverted);
 
-// Per-card remove (event delegation; disabled while a file is converting)
+// Per-card remove and download (event delegation; removes are locked mid-batch)
 document.getElementById('convert-cards-grid').addEventListener('click', e => {
-    const btn = e.target.closest('[data-convert-remove]');
-    if (!btn) return;
-    const index = parseInt(btn.dataset.convertRemove, 10);
-    if (!isNaN(index)) removeConvertFileAt(index);
+    const removeBtn = e.target.closest('[data-convert-remove]');
+    if (removeBtn) {
+        const index = parseInt(removeBtn.dataset.convertRemove, 10);
+        if (!isNaN(index)) removeConvertFileAt(index);
+        return;
+    }
+    const downloadBtn = e.target.closest('[data-convert-download]');
+    if (downloadBtn) {
+        const index = parseInt(downloadBtn.dataset.convertDownload, 10);
+        if (!isNaN(index)) downloadConvertedAt(index);
+    }
 });
+
+// A batch result goes through the same delivery as every other result, so a
+// not-kept conversion is acknowledged instead of waiting out the sweep.
+async function downloadConvertedAt(index) {
+    const item = state.convertFiles[index];
+    if (!item || item.status !== 'done' || !item.resultName || item.delivered) return;
+    try {
+        await deliverResult(item.resultName, item.temporary);
+        if (item.temporary) {
+            item.delivered = true;   // the copy is gone; don't offer it again
+            renderConvertCards();
+        }
+    } catch (err) {
+        showStatus('Download error: ' + err.message, 'error');  // retry stays available
+    }
+}
 
 async function startConvertAll() {
     if (state.convertFiles.length === 0) { showStatus('Add images to convert first.', 'error'); return; }
@@ -2671,13 +3258,22 @@ async function startConvertAll() {
 
     const btn       = document.getElementById('convert-image-btn');
     const outFormat = document.getElementById('convert-format').value;
-    const quality   = parseInt(document.getElementById('convert-quality').value, 10) || 90;
+    const selected = document.getElementById('convert-format').selectedOptions;
+    if (selected && selected[0] && selected[0].disabled) {
+        showStatus(selected[0].title || 'This output is unavailable in this build. Choose another format.', 'error');
+        return;
+    }
+    const quality   = outFormat === 'ico' ? 90 : readNumericField('convert-quality', 90);
     const widthVal  = document.getElementById('convert-width').value.trim();
     const heightVal = document.getElementById('convert-height').value.trim();
     const keep      = document.getElementById('convert-keep').checked;
     const nameVal   = document.getElementById('convert-name').value.trim();
 
-    const total = state.convertFiles.length;
+    // Capture membership and files once; successful items are not retried.
+    const batch = state.convertFiles.filter(item => item.status !== 'done')
+        .map(item => ({item, file: item.file}));
+    if (!batch.length) return;
+    const total = batch.length;
     const pad   = String(total).length;
 
     state.converting = true;
@@ -2686,18 +3282,21 @@ async function startConvertAll() {
     hideDownload();
 
     let done = 0, failed = 0;
-    for (let i = 0; i < state.convertFiles.length; i++) {
-        const item = state.convertFiles[i];
+    for (let i = 0; i < batch.length; i++) {
+        const {item, file} = batch[i];
         item.status = 'working';
         renderConvertCards();
         showStatus('Converting ' + (i + 1) + ' of ' + total + '…', 'info');
 
         const fd = new FormData();
-        fd.append('file', item.file, item.file.name);
+        fd.append('file', file, file.name);
         fd.append('out_format', outFormat);
         fd.append('quality', String(quality));
-        if (widthVal)  fd.append('width', widthVal);
-        if (heightVal) fd.append('height', heightVal);
+        if (outFormat === 'ico') fd.append('icon_size', document.getElementById('convert-icon-size').value);
+        else {
+            if (widthVal) fd.append('width', widthVal);
+            if (heightVal) fd.append('height', heightVal);
+        }
         fd.append('keep_output', keep ? 'true' : 'false');
         // A shared custom name would collide across files, so suffix per-file
         // (_001, _002…); a single file keeps the plain typed name.
@@ -2714,8 +3313,11 @@ async function startConvertAll() {
             }
             const result = await res.json();
             item.status = 'done';
+            item.comparisonSource = file;
             item.resultName = result.output_filename;
             item.resultSize = result.file_size;
+            item.temporary = result.delete_after_download;
+            item.delivered = false;
             done++;
         } catch (err) {
             item.status = 'error';
@@ -2736,16 +3338,39 @@ async function startConvertAll() {
     setHeaderConverting(false);
 }
 
-// Fallback bulk download: trigger a download for each converted (kept) file.
-// (When F19's /files/archive lands, swap this for a single ZIP request.)
+// Bulk download: one ZIP from /files/archive rather than a download per file,
+// which browsers throttle or block. Covers the successful items only; failed
+// ones have no result to archive.
+const CONVERTED_ARCHIVE_NAME = 'magicflow_converted.zip';
+
 async function downloadAllConverted() {
-    const done = state.convertFiles.filter(f => f.status === 'done' && f.resultName);
-    for (const item of done) {
-        const a = document.createElement('a');
-        a.href = '/download/' + encodeURIComponent(item.resultName);
-        a.download = item.resultName;
-        document.body.appendChild(a); a.click(); a.remove();
-        await new Promise(r => setTimeout(r, 300));  // stagger so the browser doesn't block
+    const done = state.convertFiles.filter(f => f.status === 'done' && f.resultName && !f.delivered);
+    if (!done.length) return;
+    const btn = document.getElementById('convert-download-all-btn');
+    btn.disabled = true;
+    try {
+        const res = await fetch('/files/archive', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filenames: done.map(f => f.resultName) }),
+        });
+        if (!res.ok) {
+            let detail = 'Archive failed.';
+            try { const j = await res.json(); detail = j.detail || detail; } catch (_) {}
+            throw new Error(detail);
+        }
+        saveBlob(await res.blob(), CONVERTED_ARCHIVE_NAME);
+        // Acknowledge only what the server owns as temporary; kept files stay.
+        done.filter(f => f.temporary).forEach(f => {
+            releaseTempOutput(f.resultName);
+            f.delivered = true;
+        });
+        renderConvertCards();
+        showToast('Downloading ' + done.length + ' file' + (done.length === 1 ? '' : 's') + ' as ZIP');
+    } catch (err) {
+        showStatus('Download error: ' + err.message, 'error');  // nothing released; retry
+    } finally {
+        btn.disabled = false;
     }
 }
 
@@ -2757,6 +3382,7 @@ document.getElementById('advanced-toggle-btn').addEventListener('click', () => {
     const icon  = document.getElementById('advanced-toggle-icon');
     const open  = panel.style.display === 'none' || panel.style.display === '';
     panel.style.display = open ? 'block' : 'none';
+    document.getElementById('advanced-toggle-btn').setAttribute('aria-expanded', String(open));
     icon.textContent    = open ? 'expand_more' : 'chevron_right';
 });
 
@@ -2787,7 +3413,7 @@ document.getElementById('advanced-toggle-btn').addEventListener('click', () => {
 // ════════════════════════════════════════════════
 const bgPicker = document.getElementById('setting-background-picker');
 const bgText   = document.getElementById('setting-background');
-bgPicker.addEventListener('input', () => { bgText.value = bgPicker.value; });
+bgPicker.addEventListener('input', () => { bgText.value = bgPicker.value; updateResizeHint(); });
 bgText.addEventListener('input',   () => {
     // Only sync picker for valid hex colors
     if (/^#[0-9a-fA-F]{6}$/.test(bgText.value)) bgPicker.value = bgText.value;
@@ -2833,15 +3459,77 @@ function setHeaderConverting(active) {
 }
 
 // ════════════════════════════════════════════════
+// RESULT DELIVERY
+// Every completed job — Combine, Convert All, Re-convert — finishes here, so
+// one lifecycle covers all three: fetch the bytes, hand them to the browser,
+// and only then tell the server a temporary copy can go. The download itself is
+// read-only (FIX-002), so a failure leaves the result on the server and the
+// caller can simply offer the button again.
+// ════════════════════════════════════════════════
+const DOWNLOAD_LABEL = '<span aria-hidden="true" class="material-symbols-outlined">download</span> Download';
+const DOWNLOADED_LABEL = '<span aria-hidden="true" class="material-symbols-outlined">check</span> Downloaded';
+
+function saveBlob(blob, filename) {
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+}
+
+// Throws on a failed download so the caller can keep its retry affordance.
+async function deliverResult(filename, temporary) {
+    const res = await fetch('/download/' + encodeURIComponent(filename));
+    if (!res.ok) throw new Error('Server returned ' + res.status);
+    saveBlob(await res.blob(), filename);
+    // Best-effort acknowledgement — an un-released temporary expires on its own,
+    // so a failure here must not look like a failed download.
+    if (temporary) releaseTempOutput(filename);
+}
+
+// How long a temporary result lives if the user never downloads it. Server-sent
+// (expires_in, seconds); the fallback only matters if an older response omits it.
+const TEMP_RESULT_TTL_S = 3600;
+
+function temporaryResultNote(expiresIn) {
+    const minutes = Math.round((expiresIn || TEMP_RESULT_TTL_S) / 60);
+    const window = minutes >= 60
+        ? Math.round(minutes / 60) + ' hour' + (Math.round(minutes / 60) === 1 ? '' : 's')
+        : minutes + ' minutes';
+    return 'Not kept on the server: this copy is removed once you download it, ' +
+           'and in about ' + window + ' if you don\'t.';
+}
+
+// Shared preview fallback: a format the browser cannot decode (TIFF, PDF, TGA…)
+// falls back to the server-rendered thumbnail, then to an explicit prompt, so a
+// completed job never shows an unexplained empty frame.
+function attachPreviewFallback(img, filename, onExhausted) {
+    let triedThumb = false;
+    img.addEventListener('error', () => {
+        if (!triedThumb) {
+            triedThumb = true;
+            img.src = '/thumb/' + encodeURIComponent(filename);
+            return;
+        }
+        onExhausted();
+    });
+}
+
+// ════════════════════════════════════════════════
 // DOWNLOAD
 // ════════════════════════════════════════════════
-function showDownloadArea(filename, deleteAfter, fileSize) {
+function showDownloadArea(filename, deleteAfter, fileSize, expiresIn) {
     state.pendingDownload = { filename, deleteAfter, fileSize };
+    state.comparisonSource = null;
 
     const section = document.getElementById('download-section');
     section.hidden = false;
 
     document.getElementById('download-filename').textContent = filename;
+    document.getElementById('download-filename').title = filename;
     document.getElementById('download-filesize').textContent = formatBytes(fileSize);
 
     // Load the preview: <video> for MP4/WebM, <img> for everything else
@@ -2852,29 +3540,38 @@ function showDownloadArea(filename, deleteAfter, fileSize) {
     video.style.display = 'none';
     video.removeAttribute('src');
     spinner.style.display = 'inline-block';
+    document.getElementById('preview-unavailable').style.display = 'none';
     const previewUrl = '/download/' + encodeURIComponent(filename);
     if (/\.(mp4|webm)$/i.test(filename)) {
         video.onloadeddata = () => { spinner.style.display = 'none'; video.style.display = 'block'; };
         video.onerror = () => { spinner.style.display = 'none'; };
+        video.autoplay = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         video.src = previewUrl;
     } else {
-        img.onload = () => { spinner.style.display = 'none'; img.style.display = 'block'; };
-        img.onerror = () => { spinner.style.display = 'none'; };
-        img.src = previewUrl;
+        // Fresh node per result: the fallback listener is one-shot per preview.
+        const fresh = img.cloneNode(false);
+        fresh.removeAttribute('src');   // never reuse the previous result's load
+        img.replaceWith(fresh);
+        fresh.onload = () => { spinner.style.display = 'none'; fresh.style.display = 'block'; };
+        attachPreviewFallback(fresh, filename, () => {
+            spinner.style.display = 'none';
+            fresh.style.display = 'none';
+            document.getElementById('preview-unavailable').style.display = 'flex';
+        });
+        fresh.src = previewUrl;
     }
 
     const btn  = document.getElementById('download-btn');
     const note = document.getElementById('download-note');
+    // Every new result starts with a fresh offer — the previous one may have
+    // left the button reading "Downloaded".
     btn.disabled = false;
     btn.style.opacity = '1';
     btn.style.pointerEvents = 'auto';
+    btn.innerHTML = DOWNLOAD_LABEL;
 
-    if (deleteAfter) {
-        note.textContent = 'This file will be removed from the server after download.';
-        note.style.display = 'block';
-    } else {
-        note.style.display = 'none';
-    }
+    note.style.display = deleteAfter ? 'block' : 'none';
+    if (deleteAfter) note.textContent = temporaryResultNote(expiresIn);
 }
 
 function hideDownload() {
@@ -2883,44 +3580,56 @@ function hideDownload() {
     const video = document.getElementById('preview-video');
     if (video) { video.pause(); video.removeAttribute('src'); video.style.display = 'none'; }
     state.pendingDownload = null;
+    state.comparisonSource = null;
 }
 
 document.getElementById('download-btn').addEventListener('click', async () => {
     if (!state.pendingDownload) return;
     const { filename, deleteAfter } = state.pendingDownload;
-    const url = '/download/' + encodeURIComponent(filename) + (deleteAfter ? '?delete=true' : '');
+    const btn = document.getElementById('download-btn');
 
     try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Server returned ' + res.status);
-        const blob = await res.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
-
+        await deliverResult(filename, deleteAfter);
         if (deleteAfter) {
-            const btn = document.getElementById('download-btn');
+            // The copy is gone now, so the offer must not look repeatable.
             btn.disabled = true;
             btn.style.opacity = '0.5';
             btn.style.pointerEvents = 'none';
-            btn.innerHTML = '<span class="material-symbols-outlined">check</span> Downloaded';
+            btn.innerHTML = DOWNLOADED_LABEL;
         }
     } catch (err) {
+        // Nothing was released, so the button stays live for a retry.
         showStatus('Download error: ' + err.message, 'error');
     }
 });
 
+// Tell the server a not-kept output has been delivered and can be discarded.
+function releaseTempOutput(filename) {
+    return fetch('/files/temp/' + encodeURIComponent(filename), { method: 'DELETE' })
+        .catch(() => {});  // swept within the hour regardless
+}
+
 // ════════════════════════════════════════════════
 // CONVERSION
 // ════════════════════════════════════════════════
+// Every numeric control Combine sends, in the order they appear in the panel,
+// so the field an error points at is the first one the user would reach.
+const COMBINE_NUMERIC_FIELDS = [
+    'setting-delay', 'setting-loop', 'setting-width', 'setting-height',
+    'setting-quality', 'setting-rotate', 'setting-brightness',
+    'setting-saturation', 'setting-hue', 'setting-sharpen', 'setting-blur',
+    'setting-colors',
+];
+
 async function startConversion() {
     if (state.converting || state.files.length === 0) return;
+    // Say which field is wrong before uploading anything: the server's own
+    // message is correct but arrives after the upload and names a setting, not
+    // a control.
+    if (blockInvalidFields(COMBINE_NUMERIC_FIELDS)) return;
+    if (!validatePDFLayout('setting')) return;
     state.converting = true;
+    const comparisonSource = state.files[0].file;
     hideDownload();
 
     const convertBtn = document.getElementById('convert-btn');
@@ -2928,30 +3637,30 @@ async function startConversion() {
     convertBtn.style.opacity = '0.6';
     setHeaderConverting(true);
 
-    const delay    = parseInt(document.getElementById('setting-delay').value, 10) || 100;
-    const loop     = parseInt(document.getElementById('setting-loop').value, 10) || 0;
+    const delay    = readNumericField('setting-delay');
+    const loop     = readNumericField('setting-loop');
     const widthVal = document.getElementById('setting-width').value.trim();
     const heightVal= document.getElementById('setting-height').value.trim();
     const resizeMode = document.getElementById('setting-resize-mode').value;
     const boomerang  = document.getElementById('setting-boomerang').checked;
-    const quality  = parseInt(document.getElementById('setting-quality').value, 10) || 85;
+    const quality  = readNumericField('setting-quality');
     const keepOut  = document.getElementById('keep-output').checked;
     const customName = document.getElementById('output-name').value.trim();
     // Advanced
-    const rotate       = parseInt(document.getElementById('setting-rotate').value, 10) || 0;
+    const rotate       = readNumericField('setting-rotate');
     const flip         = document.getElementById('setting-flip').checked;
     const flop         = document.getElementById('setting-flop').checked;
-    const brightness   = parseInt(document.getElementById('setting-brightness').value, 10) || 100;
-    const saturation   = parseInt(document.getElementById('setting-saturation').value, 10) || 100;
-    const hue          = parseInt(document.getElementById('setting-hue').value, 10) || 100;
+    const brightness   = readNumericField('setting-brightness');
+    const saturation   = readNumericField('setting-saturation');
+    const hue          = readNumericField('setting-hue');
     const grayscale    = document.getElementById('setting-grayscale').checked;
     const negate       = document.getElementById('setting-negate').checked;
     const sepia        = document.getElementById('setting-sepia').checked;
     const autoLevel    = document.getElementById('setting-auto-level').checked;
     const normalize    = document.getElementById('setting-normalize').checked;
-    const sharpen      = parseFloat(document.getElementById('setting-sharpen').value) || 0;
-    const blur         = parseFloat(document.getElementById('setting-blur').value) || 0;
-    const colors       = parseInt(document.getElementById('setting-colors').value, 10) || 256;
+    const sharpen      = readNumericField('setting-sharpen');
+    const blur         = readNumericField('setting-blur');
+    const colors       = readNumericField('setting-colors');
     const dither       = document.getElementById('setting-dither').value;
     const optLayers    = document.getElementById('setting-optimize-layers').checked;
     const strip        = document.getElementById('setting-strip').checked;
@@ -2970,6 +3679,7 @@ async function startConversion() {
     }
     formData.append('job_id',           jobId);
     formData.append('format',           state.format);
+    appendPDFLayout(formData, 'setting');
     formData.append('delay',            String(delay));
     formData.append('loop',             String(loop));
     if (widthVal)   formData.append('width',  widthVal);
@@ -3020,7 +3730,11 @@ async function startConversion() {
                 const r = await fetch('/progress/' + jobId);
                 if (!r.ok) return;
                 const p = await r.json();
-                if (p.phase === 'transforming' && p.total) {
+                if (p.phase === 'queued') {
+                    // The server runs one conversion at a time; say so rather
+                    // than letting the job look stuck behind someone else's.
+                    showStatus('Waiting for the converter — another job is running…', 'info');
+                } else if (p.phase === 'transforming' && p.total) {
                     showStatus('Transforming frame ' + p.done + ' of ' + p.total + '…', 'info');
                 } else if (p.phase === 'encoding') {
                     showStatus('Encoding ' + (state.format || '').toUpperCase() + '…', 'info');
@@ -3052,7 +3766,8 @@ async function startConversion() {
 
         const result = res.body;
         showStatus('Conversion complete.', 'success');
-        showDownloadArea(result.output_filename, result.delete_after_download, result.file_size);
+        showDownloadArea(result.output_filename, result.delete_after_download, result.file_size, result.expires_in);
+        state.comparisonSource = comparisonSource;
         loadRecentConversions();
     } catch (err) {
         showStatus(err.message || 'An unexpected error occurred.', 'error');
@@ -3107,23 +3822,69 @@ function reconvertBlockInfo(filename) {
 // is pruned to still-existing files on every /files load.
 const selectedFiles = new Set();
 
-// Second card meta line describing the recipe that produced a file, e.g.
-// "GIF · 24 frames · 800×450 · q85 · 100 ms". Returns '' when there's no sidecar
-// recipe (older files), so those cards look exactly as before. All values are
-// escaped — recipe fields ultimately derive from user-supplied form data.
+// Read-only output facts, separate from the requested settings already baked
+// into the file. Legacy recipes remain readable without inventing measurements.
 const RECIPE_TIMED_FORMATS = ['gif', 'webp', 'apng', 'mp4', 'webm'];
-function recipeMetaLine(recipe) {
-    if (!recipe) return '';
+function recipeObject(value) {
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+}
+
+function recipeSections(recipe) {
+    const r = recipeObject(recipe);
+    if (r.schema_version === 2)
+        return {requested: recipeObject(r.requested), effective: recipeObject(r.effective)};
+    if (r.schema_version == null) return {requested: r, effective: r};
+    return {requested: {}, effective: {}}; // unknown versions are history, never instructions
+}
+
+function recipeSummary(recipe) {
+    const {requested, effective: r} = recipeSections(recipe);
     const parts = [];
-    if (recipe.format) parts.push(String(recipe.format).toUpperCase());
-    if (recipe.frames) parts.push(recipe.frames + ' frame' + (recipe.frames === 1 ? '' : 's'));
-    if (recipe.width && recipe.height) parts.push(recipe.width + '×' + recipe.height);
-    if (recipe.quality != null) parts.push('q' + recipe.quality);
-    if (recipe.delay != null && RECIPE_TIMED_FORMATS.includes(recipe.format))
-        parts.push(recipe.delay + ' ms');
-    if (!parts.length) return '';
+    if (typeof r.format === 'string') parts.push(r.format.toUpperCase());
+    if (Number.isInteger(r.frames) && r.frames > 0)
+        parts.push(r.frames + ' frame' + (r.frames === 1 ? '' : 's'));
+    if (Number.isInteger(r.width) && Number.isInteger(r.height) && r.width > 0 && r.height > 0)
+        parts.push(r.width + '×' + r.height);
+    if (typeof r.encoder === 'string') parts.push(r.encoder);
+    if (Number.isFinite(r.video_crf)) parts.push('CRF ' + r.video_crf);
+    else if (Number.isFinite(r.quality)) parts.push('q' + r.quality);
+    const timing = recipeObject(r.timing);
+    const measured = Array.isArray(timing.measured_delays_ms) ? timing.measured_delays_ms : [];
+    if (measured.length && measured.every(v => typeof v === 'number' && Number.isFinite(v))) {
+        const values = [...new Set(measured)];
+        parts.push((values.length === 1 ? values[0] + ' ms' : 'Variable timing') +
+            (timing.basis === 'frame_intervals' ? ' (frame intervals)' : ''));
+    } else if (RECIPE_TIMED_FORMATS.includes(r.format)) {
+        parts.push('Timing not measured');
+    }
+    if (Number.isFinite(requested.quality) && r.quality == null && !Number.isFinite(r.video_crf))
+        parts.push('Requested q' + requested.quality);
+    return parts.join(' · ');
+}
+
+function recipeProvenanceText(recipe) {
+    const {requested} = recipeSections(recipe);
+    const summary = recipeSummary(recipe);
+    if (!summary && !Object.keys(requested).length) return 'No usable recipe is available for this file.';
+    const lines = ['Output: ' + (summary || 'Measurements unavailable'), 'Requested settings:'];
+    for (const [key, value] of Object.entries(requested)) {
+        if (value == null || ['string', 'number', 'boolean'].includes(typeof value))
+            lines.push(key.replaceAll('_', ' ') + ': ' + (value == null ? 'Auto / default' : String(value)));
+    }
+    const sources = recipeObject(recipe).sources;
+    if (Array.isArray(sources)) lines.push('Sources: ' + sources.filter(s => typeof s === 'string').join(', '));
+    const warnings = recipeObject(recipe).warnings;
+    if (Array.isArray(warnings)) lines.push(...warnings.filter(w => typeof w === 'string'));
+    if (recipeObject(recipe).schema_version == null)
+        lines.push('Legacy recipe: requested size and output measurements may be incomplete.');
+    return lines.join('\n');
+}
+
+function recipeMetaLine(recipe) {
+    const summary = recipeSummary(recipe);
+    if (!summary) return '';
     return `<p class="font-label-sm text-label-sm text-on-surface-variant/70 truncate"
-              title="Settings that produced this file">${escapeHtml(parts.join(' · '))}</p>`;
+              title="How this file was made">${escapeHtml(summary)}</p>`;
 }
 
 // Look a listed file up by name across both caches so Re-convert can read its
@@ -3165,11 +3926,11 @@ function renderSavedFiles(files) {
          src="/thumb/${encodeURIComponent(f.filename)}" alt="${name}" loading="lazy"
          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
     <div class="w-full h-full items-center justify-center" style="display:none">
-      <span class="material-symbols-outlined text-primary text-[48px] opacity-20">${/\.(mp4|webm)$/i.test(f.filename) ? 'movie' : (isPdf ? 'picture_as_pdf' : 'image')}</span>
+      <span aria-hidden="true" class="material-symbols-outlined text-primary text-[48px] opacity-20">${/\.(mp4|webm)$/i.test(f.filename) ? 'movie' : (isPdf ? 'picture_as_pdf' : 'image')}</span>
     </div>
     <!-- Full-size hint on hover -->
     <div class="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors pointer-events-none">
-      <span class="material-symbols-outlined text-white text-[36px] opacity-0 group-hover:opacity-90 transition-opacity drop-shadow-lg">zoom_out_map</span>
+      <span aria-hidden="true" class="material-symbols-outlined text-white text-[36px] opacity-0 group-hover:opacity-90 transition-opacity drop-shadow-lg">zoom_out_map</span>
     </div>
     <label class="absolute top-sm left-sm z-10 flex items-center justify-center p-xs rounded bg-surface-container-lowest/70 backdrop-blur-md border border-outline-variant/20 cursor-pointer"
            title="Select for bulk actions">
@@ -3178,7 +3939,7 @@ function renderSavedFiles(files) {
     </label>
     <div class="absolute top-sm right-sm px-sm py-xs rounded bg-tertiary/20 backdrop-blur-md
                 border border-tertiary/30 flex items-center gap-xs">
-      <span class="material-symbols-outlined text-[14px] text-tertiary">check_circle</span>
+      <span aria-hidden="true" class="material-symbols-outlined text-[14px] text-tertiary">check_circle</span>
       <span class="font-label-sm text-label-sm text-tertiary uppercase">${ext}</span>
     </div>
   </div>
@@ -3188,25 +3949,26 @@ function renderSavedFiles(files) {
       <p class="font-label-sm text-label-sm text-on-surface-variant">${size} &bull; ${date}</p>
       ${recipeMetaLine(f.recipe)}
     </div>
-    <div class="mt-auto flex gap-sm pt-sm border-t border-outline-variant/10">
+    <div class="mt-auto flex flex-wrap gap-sm pt-sm border-t border-outline-variant/10">
       <a href="${dlUrl}" download="${name}"
         class="flex-1 py-sm rounded-lg bg-tertiary text-on-tertiary font-bold hover:brightness-110
                transition-all flex items-center justify-center gap-xs shadow-[0_0_15px_rgba(78,222,163,0.2)]">
-        <span class="material-symbols-outlined text-[18px]">download</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">download</span>
         <span class="font-label-md text-label-md">Download</span>
       </a>
-      <button data-reconvert="${name}" ${rb.blocked ? 'disabled' : ''}
+      <button aria-label="Re-convert file" data-reconvert="${name}" ${rb.blocked ? 'disabled' : ''}
         title="${rb.title}"
         class="p-sm rounded-lg glass-card border-primary/20 text-primary hover:bg-primary/10 transition-colors disabled:opacity-30">
-        <span class="material-symbols-outlined text-[18px]">cached</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">cached</span>
       </button>
-      ${editable ? `<button data-edit-file="${name}" title="Edit frames in Combine"
+      ${editable ? `<button aria-label="Edit frames in Combine" data-edit-file="${name}" title="Edit frames in Combine"
         class="p-sm rounded-lg glass-card border-primary/20 text-primary hover:bg-primary/10 transition-colors">
-        <span class="material-symbols-outlined text-[18px]">edit</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">edit</span>
       </button>` : ''}
-      <button data-delete-file="${name}"
+      <button data-compare-saved="${name}" class="p-sm rounded-lg glass-card" aria-label="Compare output preview">Compare</button>
+      <button aria-label="Delete file" data-delete-file="${name}"
         class="p-sm rounded-lg glass-card border-error/20 text-error hover:bg-error/10 transition-colors">
-        <span class="material-symbols-outlined text-[18px]">delete</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">delete</span>
       </button>
     </div>
   </div>
@@ -3266,15 +4028,15 @@ function renderRecentConversions(files) {
          src="/thumb/${encodeURIComponent(f.filename)}" alt="${name}" loading="lazy"
          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
     <div class="w-full h-full items-center justify-center" style="display:none">
-      <span class="material-symbols-outlined text-primary text-[48px] opacity-20">${/\.(mp4|webm)$/i.test(f.filename) ? 'movie' : (isPdf ? 'picture_as_pdf' : 'image')}</span>
+      <span aria-hidden="true" class="material-symbols-outlined text-primary text-[48px] opacity-20">${/\.(mp4|webm)$/i.test(f.filename) ? 'movie' : (isPdf ? 'picture_as_pdf' : 'image')}</span>
     </div>
     <!-- Full-size hint on hover -->
     <div class="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors pointer-events-none">
-      <span class="material-symbols-outlined text-white text-[36px] opacity-0 group-hover:opacity-90 transition-opacity drop-shadow-lg">zoom_out_map</span>
+      <span aria-hidden="true" class="material-symbols-outlined text-white text-[36px] opacity-0 group-hover:opacity-90 transition-opacity drop-shadow-lg">zoom_out_map</span>
     </div>
     <div class="absolute top-sm right-sm px-sm py-xs rounded bg-tertiary/20 backdrop-blur-md
                 border border-tertiary/30 flex items-center gap-xs">
-      <span class="material-symbols-outlined text-[14px] text-tertiary">check_circle</span>
+      <span aria-hidden="true" class="material-symbols-outlined text-[14px] text-tertiary">check_circle</span>
       <span class="font-label-sm text-label-sm text-tertiary uppercase">${ext}</span>
     </div>
   </div>
@@ -3284,25 +4046,26 @@ function renderRecentConversions(files) {
       <p class="font-label-sm text-label-sm text-on-surface-variant">${size} &bull; ${ext}</p>
       ${recipeMetaLine(f.recipe)}
     </div>
-    <div class="mt-auto flex gap-sm pt-sm border-t border-outline-variant/10">
+    <div class="mt-auto flex flex-wrap gap-sm pt-sm border-t border-outline-variant/10">
       <a href="${dlUrl}" download="${name}"
         class="flex-1 py-sm rounded-lg bg-tertiary text-on-tertiary font-bold hover:brightness-110
                transition-all flex items-center justify-center gap-xs shadow-[0_0_15px_rgba(78,222,163,0.2)]">
-        <span class="material-symbols-outlined text-[18px]">download</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">download</span>
         <span class="font-label-md text-label-md">Download</span>
       </a>
-      <button data-reconvert="${name}" ${rb.blocked ? 'disabled' : ''}
+      <button aria-label="Re-convert file" data-reconvert="${name}" ${rb.blocked ? 'disabled' : ''}
         title="${rb.title}"
         class="p-sm rounded-lg glass-card border-primary/20 text-primary hover:bg-primary/10 transition-colors disabled:opacity-30">
-        <span class="material-symbols-outlined text-[18px]">cached</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">cached</span>
       </button>
-      ${editable ? `<button data-edit-file="${name}" title="Edit frames in Combine"
+      ${editable ? `<button aria-label="Edit frames in Combine" data-edit-file="${name}" title="Edit frames in Combine"
         class="p-sm rounded-lg glass-card border-primary/20 text-primary hover:bg-primary/10 transition-colors">
-        <span class="material-symbols-outlined text-[18px]">edit</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">edit</span>
       </button>` : ''}
-      <button data-delete-recent="${name}"
+      <button data-compare-saved="${name}" class="p-sm rounded-lg glass-card" aria-label="Compare output preview">Compare</button>
+      <button aria-label="Delete file" data-delete-recent="${name}"
         class="p-sm rounded-lg glass-card border-error/20 text-error hover:bg-error/10 transition-colors">
-        <span class="material-symbols-outlined text-[18px]">delete</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[18px]">delete</span>
       </button>
     </div>
   </div>
@@ -3310,6 +4073,19 @@ function renderRecentConversions(files) {
 </div>`;
     }
     grid.innerHTML = html;
+}
+
+// Every explicit library deletion confirms the same irreversible action.
+function confirmFileDeletion(names, visibleNames = null) {
+    const target = names.length === 1 ? '"' + names[0] + '"' : names.length + ' files';
+    let message = 'Delete ' + target + '? This cannot be undone.';
+    if (visibleNames !== null) {
+        const visible = new Set(visibleNames);
+        const hidden = names.filter(name => !visible.has(name)).length;
+        if (hidden) message += '\n\n' + hidden + ' selected file' + (hidden === 1 ? '' : 's')
+            + ' not shown in the current view will also be deleted.';
+    }
+    return confirm(message);
 }
 
 document.getElementById('recent-grid').addEventListener('click', async e => {
@@ -3323,12 +4099,13 @@ document.getElementById('recent-grid').addEventListener('click', async e => {
     if (!btn) return;
     const filename = btn.dataset.deleteRecent;
     if (!filename) return;
+    if (!confirmFileDeletion([filename])) return;
     try {
         const res = await fetch('/files/' + encodeURIComponent(filename), { method: 'DELETE' });
         if (!res.ok) throw new Error('Delete failed');
         loadRecentConversions();
     } catch (err) {
-        showStatus('Could not delete: ' + err.message, 'error');
+        showToast('Could not delete "' + filename + '": ' + err.message + '. Try again.', 'error');
     }
 });
 
@@ -3366,12 +4143,13 @@ document.getElementById('saved-files-grid').addEventListener('click', async e =>
     if (!btn) return;
     const filename = btn.dataset.deleteFile;
     if (!filename) return;
+    if (!confirmFileDeletion([filename])) return;
     try {
         const res = await fetch('/files/' + encodeURIComponent(filename), { method: 'DELETE' });
         if (!res.ok) throw new Error('Delete failed');
         loadSavedFiles();
     } catch (err) {
-        alert('Could not delete file: ' + err.message);
+        showToast('Could not delete "' + filename + '": ' + err.message + '. Try again.', 'error');
     }
 });
 
@@ -3384,6 +4162,8 @@ function updateBulkButtons() {
     const del = document.getElementById('delete-selected-btn');
     if (dl)  dl.disabled  = !any;
     if (del) del.disabled = !any;
+    const compare = document.getElementById('compare-selected-btn');
+    if (compare) compare.disabled = selectedFiles.size !== 2;
 }
 
 // Re-apply checkbox + button state after any (re)render so a search filter or
@@ -3418,7 +4198,9 @@ document.getElementById('select-all-files-btn').addEventListener('click', () => 
 document.getElementById('delete-selected-btn').addEventListener('click', async () => {
     const names = [...selectedFiles];
     if (!names.length) return;
-    if (!confirm('Delete ' + names.length + ' file' + (names.length === 1 ? '' : 's') + '? This cannot be undone.')) return;
+    const visibleNames = [...document.querySelectorAll('#saved-files-grid .file-select')]
+        .map(cb => cb.dataset.select);
+    if (!confirmFileDeletion(names, visibleNames)) return;
     try {
         const res = await fetch('/files/delete', {
             method: 'POST',
@@ -3427,12 +4209,16 @@ document.getElementById('delete-selected-btn').addEventListener('click', async (
         });
         if (!res.ok) throw new Error('Delete failed');
         const data = await res.json();
-        selectedFiles.clear();
-        const n = (data.deleted || []).length;
-        showToast('Deleted ' + n + ' file' + (n === 1 ? '' : 's'));
+        const deleted = data.deleted || [];
+        for (const name of deleted) selectedFiles.delete(name);
+        const n = deleted.length;
+        const failed = (data.missing || []).length;
+        const summary = 'Deleted ' + n + ' file' + (n === 1 ? '' : 's');
+        if (failed) showToast(summary + '. ' + failed + ' could not be deleted. Refresh or try again.', 'error');
+        else showToast(summary);
         loadSavedFiles();
     } catch (err) {
-        alert('Could not delete files: ' + err.message);
+        showToast('Could not delete files: ' + err.message + '. Try again.', 'error');
     }
 });
 
@@ -3469,6 +4255,49 @@ document.getElementById('download-selected-btn').addEventListener('click', async
 // ════════════════════════════════════════════════
 // RE-CONVERT (re-encode an existing stored output)
 // ════════════════════════════════════════════════
+// One focus boundary for both overlays; preserve pre-existing inert state.
+let activeModal = null;
+function modalFocusables(root) {
+    return [...root.querySelectorAll('button, a[href], input, select, textarea, iframe, [tabindex]')]
+        .filter(el => !el.disabled && el.tabIndex >= 0 && el.getClientRects().length && !el.closest('[inert]'));
+}
+function beginModal(root, close, initial) {
+    if (activeModal) return;
+    const opener = document.activeElement;
+    const siblings = [...document.body.children].filter(el => el !== root && el.id !== 'toast-container' && el.tagName !== 'SCRIPT');
+    activeModal = {root, close, opener, siblings: siblings.map(el => [el, el.inert])};
+    siblings.forEach(el => { el.inert = true; });
+    (initial || modalFocusables(root)[0] || root).focus();
+}
+function endModal(root) {
+    if (!activeModal || activeModal.root !== root) return;
+    const previous = activeModal;
+    activeModal = null;
+    previous.siblings.forEach(([el, inert]) => { el.inert = inert; });
+    const target = previous.opener;
+    if (target && target.isConnected && target.getClientRects().length && !target.disabled) target.focus();
+    else document.getElementById('nav-dashboard').focus();
+}
+function modalKeydown(event) {
+    if (!activeModal) return;
+    if (event.key === 'Escape') {
+        event.preventDefault(); event.stopImmediatePropagation(); activeModal.close(); return;
+    }
+    if (event.key !== 'Tab') return;
+    const {root} = activeModal;
+    const items = modalFocusables(root);
+    const first = items[0] || root, last = items[items.length - 1] || root;
+    if (!items.length || !root.contains(document.activeElement) ||
+        (event.shiftKey ? document.activeElement === first : document.activeElement === last)) {
+        event.preventDefault(); (event.shiftKey ? last : first).focus();
+    }
+}
+document.addEventListener('keydown', modalKeydown, true);
+document.addEventListener('focusin', event => {
+    if (activeModal && !activeModal.root.contains(event.target))
+        (modalFocusables(activeModal.root)[0] || activeModal.root).focus();
+}, true);
+
 const reconvertModal = document.getElementById('reconvert-modal');
 let reconvertTarget = null;
 
@@ -3485,6 +4314,7 @@ function updateReconvertFormatUI() {
     document.getElementById('reconvert-keep-timing-wrap').style.display = hasDelay ? '' : 'none';
     document.getElementById('reconvert-ext').textContent = '.' + fmt;
     updateReconvertTimingUI();
+    updatePDFLayout('reconvert');
 }
 
 // While "Keep original frame timing" is on, the Delay field is an inert
@@ -3502,6 +4332,7 @@ document.getElementById('reconvert-advanced-toggle-btn').addEventListener('click
     const icon  = document.getElementById('reconvert-advanced-toggle-icon');
     const open  = panel.style.display === 'none' || panel.style.display === '';
     panel.style.display = open ? 'block' : 'none';
+    document.getElementById('reconvert-advanced-toggle-btn').setAttribute('aria-expanded', String(open));
     icon.textContent    = open ? 'expand_more' : 'chevron_right';
 });
 
@@ -3513,10 +4344,15 @@ rcBgText.addEventListener('input',   () => {
     if (/^#[0-9a-fA-F]{6}$/.test(rcBgText.value)) rcBgPicker.value = rcBgText.value;
 });
 
-// Every prefillable Re-convert field: [elementId, recipeKey, default, kind].
-// Absent recipe → every field is reset to its default, so a recipe-less file
-// never inherits the previous file's values.
+// Every field is reset before reading the small encoding-settings allowlist.
+// Past pixel/geometry/sequence operations are provenance, not new operations.
 const RECONVERT_FIELDS = [
+    ['reconvert-pdf-page-size', 'pdf_page_size', 'original', 'txt'],
+    ['reconvert-pdf-orientation', 'pdf_orientation', 'portrait', 'txt'],
+    ['reconvert-pdf-width-mm', 'pdf_width_mm', 210, 'num'],
+    ['reconvert-pdf-height-mm', 'pdf_height_mm', 297, 'num'],
+    ['reconvert-pdf-margin-mm', 'pdf_margin_mm', 10, 'num'],
+    ['reconvert-pdf-fit', 'pdf_fit', 'fit', 'txt'],
     ['reconvert-quality',         'quality',         85,          'num'],
     ['reconvert-delay',           'delay',           100,         'num'],
     ['reconvert-loop',            'loop',            0,           'num'],
@@ -3546,49 +4382,94 @@ const RECONVERT_FIELDS = [
 ];
 
 function prefillReconvert(recipe) {
-    const r = recipe || {};
+    const {requested: r} = recipeSections(recipe);
+    const reusableNumbers = {quality: [1, 100], delay: [1, 10000], loop: [0, 1000], colors: [2, 256]};
     for (const [id, key, def, kind] of RECONVERT_FIELDS) {
         const el = document.getElementById(id);
         if (!el) continue;
-        const has = r[key] !== undefined && r[key] !== null;
-        const val = has ? r[key] : def;
-        if (kind === 'chk') el.checked = !!val;
+        let val = def;
+        const range = reusableNumbers[key];
+        if (range && Number.isInteger(r[key]) && r[key] >= range[0] && r[key] <= range[1]) val = r[key];
+        if (key === 'dither' && ['Riemersma', 'Floyd-Steinberg', 'None'].includes(r[key])) val = r[key];
+        if (key === 'optimize_layers' && typeof r[key] === 'boolean') val = r[key];
+        if (kind === 'chk') el.checked = val;
         else el.value = (val === '' ? '' : String(val));
     }
 }
 
 function openReconvert(filename) {
+    if (state.converting) { showToast('Wait for the current operation to finish.'); return; }
     if (!filename) return;
     reconvertTarget = filename;
     document.getElementById('reconvert-source').textContent = 'Source: ' + filename;
+    document.getElementById('reconvert-source').title = 'Source: ' + filename;
     document.getElementById('reconvert-name').value = '';
     const status = document.getElementById('reconvert-status');
     status.style.display = 'none';
 
-    // Pull the recipe that produced this file (if any) to open where the
-    // original job left off; recipe-less files reset cleanly to defaults.
+    // The saved file is the source; its recipe describes effects already baked in.
     const entry  = findFileEntry(filename);
     const recipe = entry && entry.recipe ? entry.recipe : null;
     prefillReconvert(recipe);
+    document.getElementById('reconvert-provenance').textContent = recipeProvenanceText(recipe);
 
-    // Target format: prefer the recipe's own format when it's a valid target,
-    // else the source extension, else GIF.
+    // Prefer the saved file's format, and never select a disabled capability.
     const RECONVERT_FORMATS = ['gif', 'webp', 'apng', 'mp4', 'webm', 'tiff', 'pdf'];
     const ext = (filename.split('.').pop() || '').toLowerCase();
-    document.getElementById('reconvert-format').value =
-        (recipe && RECONVERT_FORMATS.includes(recipe.format)) ? recipe.format
-        : (RECONVERT_FORMATS.includes(ext) ? ext : 'gif');
+    const selector = document.getElementById('reconvert-format');
+    const available = Array.from(selector.options).filter(o => !o.disabled).map(o => o.value);
+    selector.value = RECONVERT_FORMATS.includes(ext) && available.includes(ext) ? ext
+        : (available.includes('gif') ? 'gif' : available[0] || '');
 
     updateReconvertFormatUI();
     const btn = document.getElementById('reconvert-submit');
     btn.disabled = false; btn.style.opacity = '1';
     reconvertModal.style.display = 'flex';
+    beginModal(reconvertModal, closeReconvert, document.getElementById('reconvert-close'));
 }
 
 function closeReconvert() {
+    if (state.converting) { showToast('Wait for the current operation to finish.'); return; }
+    endModal(reconvertModal);
     reconvertModal.style.display = 'none';
     reconvertTarget = null;
+    pendingReconvertResult = null;
+    document.getElementById('reconvert-result').style.display = 'none';
 }
+
+// A temporary re-conversion, offered in place rather than closed over.
+let pendingReconvertResult = null;
+
+function showReconvertResult(result) {
+    pendingReconvertResult = result;
+    document.getElementById('reconvert-result-name').textContent = result.output_filename;
+    document.getElementById('reconvert-result-name').title = result.output_filename;
+    document.getElementById('reconvert-result-size').textContent = formatBytes(result.file_size);
+    document.getElementById('reconvert-result-note').textContent =
+        temporaryResultNote(result.expires_in);
+    const btn = document.getElementById('reconvert-download');
+    btn.disabled = false;
+    btn.innerHTML = DOWNLOAD_LABEL;
+    document.getElementById('reconvert-result').style.display = 'block';
+    document.getElementById('reconvert-status').style.display = 'none';
+    btn.focus();
+}
+
+document.getElementById('reconvert-download').addEventListener('click', async () => {
+    if (!pendingReconvertResult) return;
+    const btn = document.getElementById('reconvert-download');
+    try {
+        await deliverResult(pendingReconvertResult.output_filename, true);
+        btn.disabled = true;
+        btn.innerHTML = DOWNLOADED_LABEL;
+    } catch (err) {
+        // Nothing was released, so the offer stays open for a retry.
+        const status = document.getElementById('reconvert-status');
+        status.style.display = 'block';
+        status.style.color = '#ffb4ab';
+        status.textContent = 'Download error: ' + err.message;
+    }
+});
 
 document.getElementById('reconvert-format').addEventListener('change', updateReconvertFormatUI);
 document.getElementById('reconvert-keep-timing').addEventListener('change', updateReconvertTimingUI);
@@ -3616,11 +4497,11 @@ function lightboxUnavailableHtml(filename) {
     const url  = '/download/' + encodeURIComponent(filename);
     const name = escapeHtml(filename);
     return `<div class="flex flex-col items-center text-center gap-md text-on-surface-variant">
-        <span class="material-symbols-outlined text-[64px] opacity-40">visibility_off</span>
+        <span aria-hidden="true" class="material-symbols-outlined text-[64px] opacity-40">visibility_off</span>
         <p class="font-body-lg text-body-lg text-on-surface">Preview not available for this format</p>
         <a href="${url}" download="${name}"
            class="px-lg py-md rounded-lg bg-tertiary text-on-tertiary font-bold flex items-center gap-sm hover:brightness-110 transition-all">
-           <span class="material-symbols-outlined text-[18px]">download</span> Download to view
+           <span aria-hidden="true" class="material-symbols-outlined text-[18px]">download</span> Download to view
         </a>
     </div>`;
 }
@@ -3629,11 +4510,12 @@ function openLightbox(filename) {
     if (!filename) return;
     const stage = document.getElementById('lightbox-stage');
     document.getElementById('lightbox-name').textContent = filename;
+    document.getElementById('lightbox-name').title = filename;
     // ?inline=1 lets the browser render (not download) the file — required for PDF.
     const url = '/download/' + encodeURIComponent(filename) + '?inline=1';
 
     if (/\.(mp4|webm)$/i.test(filename)) {
-        stage.innerHTML = `<video src="${url}" controls autoplay loop muted playsinline
+        stage.innerHTML = `<video src="${url}" controls ${window.matchMedia('(prefers-reduced-motion: reduce)').matches ? '' : 'autoplay'} loop muted playsinline
             class="max-w-full max-h-full rounded-lg shadow-2xl"></video>`;
     } else if (/\.pdf$/i.test(filename)) {
         stage.innerHTML = `<iframe src="${url}" title="${escapeHtml(filename)}"
@@ -3643,24 +4525,19 @@ function openLightbox(filename) {
         stage.innerHTML = `<img alt="${escapeHtml(filename)}"
             class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">`;
         const img = stage.querySelector('img');
-        let triedThumb = false;
-        img.addEventListener('error', () => {
-            if (!triedThumb) {                 // undecodable original → server thumbnail
-                triedThumb = true;
-                img.src = '/thumb/' + encodeURIComponent(filename);
-            } else {                           // thumbnail failed too → graceful message
-                stage.innerHTML = lightboxUnavailableHtml(filename);
-            }
+        attachPreviewFallback(img, filename, () => {
+            stage.innerHTML = lightboxUnavailableHtml(filename);
         });
         img.src = url;
     }
 
     lightboxEl.style.display = 'flex';
-    document.getElementById('lightbox-close').focus();
+    beginModal(lightboxEl, closeLightbox, document.getElementById('lightbox-close'));
 }
 
 function closeLightbox() {
     if (!isLightboxOpen()) return;
+    endModal(lightboxEl);
     lightboxEl.style.display = 'none';
     document.getElementById('lightbox-stage').innerHTML = '';  // stop video/gif playback, free memory
 }
@@ -3692,25 +4569,29 @@ function gridPreviewKeydown(e) {
 document.getElementById('saved-files-grid').addEventListener('keydown', gridPreviewKeydown);
 document.getElementById('recent-grid').addEventListener('keydown', gridPreviewKeydown);
 
+// The same controls as Combine, under the Re-convert panel's own ids.
+const RECONVERT_NUMERIC_FIELDS = COMBINE_NUMERIC_FIELDS.map(
+    id => id.replace(/^setting-/, 'reconvert-'));
+
 document.getElementById('reconvert-submit').addEventListener('click', async () => {
-    if (!reconvertTarget) return;
+    if (!reconvertTarget || state.converting) return;
+    const target = reconvertTarget;
     const btn    = document.getElementById('reconvert-submit');
     const status = document.getElementById('reconvert-status');
     const fmt    = document.getElementById('reconvert-format').value;
 
-    // NaN-safe readers (0 is a legitimate value — e.g. saturation 0 — so no `|| dflt`)
-    const rcInt = (id, dflt) => {
-        const v = parseInt(document.getElementById(id).value, 10);
-        return String(isNaN(v) ? dflt : v);
-    };
-    const rcFloat = (id) => {
-        const v = parseFloat(document.getElementById(id).value);
-        return String(isNaN(v) ? 0 : v);
-    };
+    // The same typed reader Combine uses: blank means the default, 0 means
+    // zero. These two panels drive identical server validation, so reading
+    // their fields differently is how the same settings came to behave
+    // differently in each.
+    const rcInt = (id, dflt) => String(readNumericField(id, dflt));
+    const rcFloat = (id) => String(readNumericField(id, 0));
     const rcChecked = id => document.getElementById(id).checked ? 'true' : 'false';
 
     const fd = new FormData();
+    if (!validatePDFLayout('reconvert')) return;
     fd.append('format',  fmt);
+    appendPDFLayout(fd, 'reconvert');
     fd.append('quality', rcInt('reconvert-quality', 85));
     fd.append('colors',  rcInt('reconvert-colors', 256));
     fd.append('delay',   rcInt('reconvert-delay', 100));
@@ -3745,34 +4626,55 @@ document.getElementById('reconvert-submit').addEventListener('click', async () =
     const name = document.getElementById('reconvert-name').value.trim();
     if (name) fd.append('custom_name', name);
 
+    if (blockInvalidFields(RECONVERT_NUMERIC_FIELDS)) {
+        status.style.display = 'block';
+        status.style.color = '#ffb4ab';
+        const offender = firstInvalidField(RECONVERT_NUMERIC_FIELDS);
+        const spec = fieldSpec(offender);
+        status.textContent = fieldLabel(offender) + ' must be ' + spec.min + '–' + spec.max + '.';
+        return;
+    }
+    state.converting = true;
     btn.disabled = true; btn.style.opacity = '0.6';
+    document.getElementById('reconvert-result').style.display = 'none';
+    pendingReconvertResult = null;
     status.style.display = 'block';
     status.style.color = '#4cd7f6';
     status.textContent = 'Re-converting...';
     setHeaderConverting(true);
 
     try {
-        const res = await fetch('/reconvert/' + encodeURIComponent(reconvertTarget), { method: 'POST', body: fd });
+        const res = await fetch('/reconvert/' + encodeURIComponent(target), { method: 'POST', body: fd });
         if (!res.ok) {
             let detail = 'Re-conversion failed.';
             try { const j = await res.json(); detail = j.detail || detail; } catch (_) {}
             throw new Error(detail);
         }
         const result = await res.json();
+        result.comparisonSource = reconvertTarget;
+        if (typeof MagicFlowCompare !== 'undefined') MagicFlowCompare.rememberSavedPair(result.output_filename, reconvertTarget);
         const n = result.frame_count;
         showToast('Re-converted (' + n + ' frame' + (n === 1 ? '' : 's') + ') → ' + result.output_filename);
-        if (result.timing === 'averaged')
-            showToast(fmt.toUpperCase() + ' target: mixed source timings averaged', 'success', 'schedule');
-        closeReconvert();
+        if (result.timing === 'preserved' && isUneven(result.effective_delays_ms))
+            showToast('Per-frame timing preserved', 'success', 'schedule');
+        // A kept result is in My Files; a temporary one is hidden there, so the
+        // modal stays open and offers it instead of closing over it.
+        if (result.delete_after_download) {
+            showReconvertResult(result);
+        } else {
+            state.converting = false;
+            closeReconvert();
+        }
         // Refresh whichever listing the user is looking at
         loadRecentConversions();
         if (!document.getElementById('view-files').hidden) loadSavedFiles();
     } catch (err) {
         status.style.color = '#ffb4ab';
         status.textContent = err.message || 'Re-conversion failed.';
-        btn.disabled = false; btn.style.opacity = '1';
         showToast('Re-conversion failed', 'error');
     } finally {
+        state.converting = false;
+        btn.disabled = false; btn.style.opacity = '1';
         setHeaderConverting(false);
     }
 });
@@ -3873,8 +4775,10 @@ const PERSIST_IDS = [
     'setting-background', 'setting-background-picker', 'setting-max-files',
     'keep-output', 'extract-format', 'extract-quality',
     'extract-start', 'extract-end', 'extract-step',
-    'convert-format', 'convert-quality', 'convert-keep', 'setting-resize-mode',
+    'convert-format', 'convert-quality', 'convert-keep', 'convert-icon-size', 'setting-resize-mode',
     'setting-boomerang',
+    'setting-pdf-page-size', 'setting-pdf-orientation', 'setting-pdf-width-mm',
+    'setting-pdf-height-mm', 'setting-pdf-margin-mm', 'setting-pdf-fit',
 ];
 
 function snapshotSettings() {
@@ -3941,43 +4845,85 @@ function showToast(message, type = 'success', icon = null) {
     }, 2200);
 }
 
-let _settingsSaveTimer = null;
-function persistSettings() {
-    clearTimeout(_settingsSaveTimer);
-    _settingsSaveTimer = setTimeout(async () => {
-        try {
-            const res = await fetch('/settings', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(snapshotSettings()),
-            });
-            if (!res.ok) throw new Error('save failed');
-            showToast('Settings saved');
-        } catch (_) {
-            // local tool — a failed save is non-fatal, but tell the user
-            showToast('Could not save settings', 'error');
+let _settingsSaveTimer = null, _settingsRevision = null;
+let _settingsGeneration = 0;
+let _settingsSaving = false, _settingsDirty = false, _settingsApplying = false;
+function validatedPresets(raw) {
+    const parsed = JSON.parse(raw || '{}');
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || Object.keys(parsed).length > MAX_USER_PRESETS)
+        throw new Error('Invalid saved presets');
+    for (const [name, values] of Object.entries(parsed)) {
+        if (!name.trim() || name.length > 40 || !values || typeof values !== 'object' || Array.isArray(values))
+            throw new Error('Invalid saved preset');
+        for (const [id, value] of Object.entries(values)) {
+            const el = document.getElementById(id);
+            if (!PERSIST_IDS.includes(id) || !id.startsWith('setting-') || !el ||
+                (el.type === 'checkbox' ? typeof value !== 'boolean' : (!['string','number'].includes(typeof value) || (typeof value === 'number' && !Number.isFinite(value)))))
+                throw new Error('Unknown or invalid preset control');
         }
-    }, 400);
+    }
+    return parsed;
 }
-
+function hydrateSettings(data) {
+    const presets = validatedPresets(data.settings.user_presets);
+    _settingsApplying = true;
+    try {
+        state.userPresets = presets;
+        applySettings(data.settings);
+        renderPresetRow();
+        _settingsRevision = data.revision;
+        updateResizeHint(); updateDelayHint(); updateTimingPreview(); updateSizeEstimate();
+    } finally { _settingsApplying = false; }
+}
+function persistSettings() {
+    if (_settingsApplying) return;
+    _settingsGeneration++;
+    _settingsDirty = true;
+    clearTimeout(_settingsSaveTimer);
+    _settingsSaveTimer = setTimeout(flushSettings, 400);
+}
+async function flushSettings() {
+    if (_settingsSaving || !_settingsDirty) return;
+    if (!_settingsRevision) { showToast('Settings are not loaded; changes remain unsaved. Reload when the server is available.', 'error'); return; }
+    _settingsSaving = true;
+    try {
+        while (_settingsDirty) {
+            _settingsDirty = false;
+            const snapshot = snapshotSettings();
+            const res = await fetch('/settings', {
+                method: 'PUT', headers: {'Content-Type': 'application/json', 'If-Match': _settingsRevision},
+                body: JSON.stringify(snapshot),
+            });
+            if (res.status === 409) {
+                _settingsDirty = false;
+                showToast('Another tab changed settings. Your changes are not saved.', 'error');
+                if (confirm('Reload the newer saved settings? OK replaces this tab’s settings. Cancel keeps your local draft unsaved.')) {
+                    const generation = _settingsGeneration;
+                    const latest = await fetch('/settings');
+                    if (!latest.ok) throw new Error('Could not reload settings');
+                    const data = await latest.json();
+                    if (generation === _settingsGeneration) hydrateSettings(data);
+                    else showToast('New local edits were retained and remain unsaved. Reload again to reconcile.', 'error');
+                }
+                return;
+            }
+            if (!res.ok) throw new Error('Save failed');
+            const result = await res.json();
+            _settingsRevision = result.revision;
+        }
+        showToast('Settings saved');
+    } catch (_) {
+        _settingsDirty = true;
+        showToast('Could not save settings; your local changes remain unsaved.', 'error');
+    } finally { _settingsSaving = false; }
+}
 async function loadSettings() {
     try {
         const res = await fetch('/settings');
+        if (!res.ok) throw new Error('Settings unreadable');
         const data = await res.json();
-        if (data && data.settings && Object.keys(data.settings).length) {
-            // F20: hydrate user presets (a JSON-string value) before rendering.
-            if (typeof data.settings.user_presets === 'string') {
-                try {
-                    const parsed = JSON.parse(data.settings.user_presets);
-                    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed))
-                        state.userPresets = parsed;
-                } catch (_) { /* corrupt value → keep empty, don't break load */ }
-            }
-            applySettings(data.settings);
-        }
-    } catch (_) { /* fall back to in-markup defaults */ }
-    renderPresetRow();  // reflect any hydrated user presets
-    // Attach AFTER applying, so restoring values doesn't echo straight back
+        hydrateSettings(data);
+    } catch (_) { showToast('Could not load saved settings. Saving is disabled until a successful reload; recovery files are preserved.', 'error'); }
     for (const id of PERSIST_IDS) {
         const el = document.getElementById(id);
         if (el) el.addEventListener('change', persistSettings);
@@ -3988,6 +4934,52 @@ async function loadSettings() {
 // SERVER CONFIG (GET /config — overwrites the fallback
 // allow-lists, caps and Settings-view labels above)
 // ════════════════════════════════════════════════
+// Which select offers which family of formats, and the /config key that says
+// what this deployment actually verified it can produce.
+const FORMAT_SELECTS = [
+    ['setting-format',   'animation_output_formats'],
+    ['reconvert-format', 'animation_output_formats'],
+    ['convert-format',   'still_output_formats'],
+    ['extract-format',   'explode_output_formats'],
+];
+
+// The server discovers its real capabilities at startup; the markup can only
+// list what the product offers. Anything the server did not verify is disabled
+// here with the reason it gave, rather than being offered and failing later.
+function applyCapabilities() {
+    const reasons = (CONFIG && CONFIG.unavailable) || {};
+    for (const [selectId, configKey] of FORMAT_SELECTS) {
+        const select = document.getElementById(selectId);
+        const available = CONFIG && CONFIG[configKey];
+        if (!select || !Array.isArray(available)) continue;
+        const supported = new Set(available);
+        let selectedWasRemoved = false;
+        for (const option of select.options) {
+            const usable = supported.has(option.value);
+            option.disabled = !usable;
+            if (usable) {
+                option.removeAttribute('title');
+                option.textContent = option.textContent.replace(/ — unavailable$/, '');
+            } else {
+                const kind = configKey === 'animation_output_formats' ? 'animation' : 'still';
+                option.title = reasons[kind + ':' + option.value] ||
+                    'Not available in this build.';
+                if (!/ — unavailable$/.test(option.textContent)) option.textContent += ' — unavailable';
+                if (option.selected) selectedWasRemoved = true;
+            }
+        }
+        // Keep a saved still-format choice visible but unusable, so merely
+        // loading a build without its coder does not rewrite the saved intent.
+        if (selectedWasRemoved && selectId !== 'convert-format') {
+            const firstUsable = [...select.options].find(o => !o.disabled);
+            if (firstUsable) {
+                select.value = firstUsable.value;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+    }
+}
+
 async function loadConfig() {
     try {
         const res = await fetch('/config');
@@ -3997,6 +4989,16 @@ async function loadConfig() {
         return;  // keep the in-markup fallbacks — the app still works
     }
 
+    if (CONFIG.build) {
+        document.getElementById('app-build-version').textContent = CONFIG.build.version;
+        const revision = CONFIG.build.revision || 'unknown';
+        const short = revision.slice(0, 12) + (revision.endsWith('-dirty') ? '-dirty' : '');
+        const source = CONFIG.build.source_sha256;
+        const details = document.getElementById('app-build-details');
+        details.textContent = 'Revision ' + short + (source ? ' · source ' + source.slice(0, 12) : ' · unbuilt source');
+        details.title = revision + (source ? ' / ' + source : '');
+    }
+
     // Allow-lists and caps
     if (Array.isArray(CONFIG.allowed_input_exts) && CONFIG.allowed_input_exts.length) {
         ALLOWED_EXTS = new Set(CONFIG.allowed_input_exts);
@@ -4004,9 +5006,18 @@ async function loadConfig() {
         MODES.combine.accept = acceptAll;
         MODES.convert.accept = acceptAll;
     }
+    if (Array.isArray(CONFIG.raw_input_exts) && CONFIG.raw_input_exts.length) {
+        RAW_EXTS = new Set(CONFIG.raw_input_exts);
+    }
+    if (Array.isArray(CONFIG.allowed_mime_types) && CONFIG.allowed_mime_types.length) {
+        ALLOWED_TYPES = new Set(CONFIG.allowed_mime_types);
+    }
     if (Array.isArray(CONFIG.explode_input_exts) && CONFIG.explode_input_exts.length) {
         EXPLODE_EXTS = new Set(CONFIG.explode_input_exts);
         MODES.extract.accept = CONFIG.explode_input_exts.join(',');
+    }
+    if (Number.isFinite(CONFIG.max_total_upload_bytes) && CONFIG.max_total_upload_bytes > 0) {
+        MAX_TOTAL_BYTES = CONFIG.max_total_upload_bytes;
     }
     if (Number.isFinite(CONFIG.max_file_size) && CONFIG.max_file_size > 0) {
         MAX_BYTES = CONFIG.max_file_size;
@@ -4025,6 +5036,8 @@ async function loadConfig() {
         fmtsEl.textContent = 'Input: ' + CONFIG.allowed_input_exts.map(extLabel).join(', ') +
             ' — Output: ' + CONFIG.animation_output_formats.map(f => f.toUpperCase()).join(', ');
     }
+    applyCapabilities();
+
     if (Number.isFinite(CONFIG.max_files) && CONFIG.max_files >= 1) {
         const mf = document.getElementById('setting-max-files');
         if (mf) mf.max = String(CONFIG.max_files);
@@ -4042,6 +5055,26 @@ loadConfig();
 setMode('combine');
 loadSettings();
 showView('dashboard');
+
+// Comparison adapters keep original File references scoped to existing result/draft lifetimes.
+if (typeof MagicFlowCompare !== 'undefined') MagicFlowCompare.configure({
+    beginModal, endModal,
+    afterClose: () => {
+        if (reconvertModal.style.display === 'flex' && !activeModal) beginModal(reconvertModal, closeReconvert, document.getElementById('reconvert-compare'));
+    },
+    result: () => state.pendingDownload ? [state.comparisonSource ? {file:state.comparisonSource,label:'First input · ' + state.comparisonSource.name} : null, {name:state.pendingDownload.filename,label:'Output · ' + state.pendingDownload.filename}] : null,
+    converted: index => {
+        const item = state.convertFiles[index];
+        return item && item.status === 'done' && !item.delivered ? [{file:item.comparisonSource || item.file,label:'Input · ' + item.file.name},{name:item.resultName,label:'Output · ' + item.resultName}] : null;
+    },
+    selected: () => selectedFiles.size === 2 ? [...selectedFiles].map(name => ({name})) : null,
+    reconverted: () => {
+        if (!pendingReconvertResult) return null;
+        const result = pendingReconvertResult;
+        endModal(reconvertModal);
+        return [{name:result.comparisonSource,label:'Source output · ' + result.comparisonSource},{name:result.output_filename,label:'Output · ' + result.output_filename}];
+    },
+});
 </script>
 </body>
 </html>
