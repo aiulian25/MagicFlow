@@ -1,0 +1,6 @@
+AVIF still alpha test fixture
+Original: abc_color_irot_alpha_irot.avif
+Source: https://raw.githubusercontent.com/AOMediaCodec/libavif/3c4027325bea051db501417a51ac902011f38656/tests/data/abc_color_irot_alpha_irot.avif
+SHA-256: b371cc88244a873131e4d10ff9363d71ce4f41cf333bd4a491b38d970d9abd3b
+License: AVIF-LICENSE.txt (upstream BSD)
+No sequence/video fixture is included.

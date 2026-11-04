@@ -1,0 +1,36 @@
+{
+  "api": [
+    "test_download_lifecycle",
+    "test_retention",
+    "test_result_contract",
+    "test_settings",
+    "test_compare",
+    "test_image_formats",
+    "test_pdf_layout"
+  ],
+  "media": [
+    "test_animation_decode",
+    "test_capabilities",
+    "test_compare",
+    "test_container_capabilities",
+    "test_deployment",
+    "test_download_lifecycle",
+    "test_edit_roundtrip",
+    "test_extract_indices",
+    "test_geometry",
+    "test_image_formats",
+    "test_job_lifecycle",
+    "test_output_publication",
+    "test_pdf_layout",
+    "test_recipes",
+    "test_resource_limits",
+    "test_result_contract",
+    "test_retention",
+    "test_settings",
+    "test_timing",
+    "test_trust_boundaries"
+  ],
+  "fidelity": [
+    "test_color_fidelity"
+  ]
+}
