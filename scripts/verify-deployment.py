@@ -11,7 +11,6 @@ import signal
 from pathlib import Path
 import subprocess
 import sys
-import tarfile
 import tempfile
 import time
 import uuid
@@ -110,19 +109,21 @@ def stop(name):
 def check(name,mode):
     result=subprocess.check_output(['docker','exec',name,'python3','-c',probe,mode],text=True)
     with (logs/'lifecycle-results.jsonl').open('a') as out:out.write(result)
-def reclaim(root):
-    """Give the bind-mounted tree back to the invoking user.
+def as_root(root, *command):
+    """Run one command over the data tree as root inside the image itself.
 
-    The service runs as its own unprivileged account and creates /data/tmp/thumbs
-    mode 700 under that uid, so on any host whose user is not that same uid the
-    files it wrote can be neither archived nor removed. This passed locally only
-    where the two uids coincided; on CI the runner is a different user and both
-    the backup tar and the temporary-directory cleanup failed."""
-    subprocess.run(['docker','run','--rm','--user','0','--network','none',
-                    '--label','magicflow.task=verify-deployment',
-                    '-v',str(root)+':/reclaim','--entrypoint','chown',image_id,
-                    '-R',f'{os.getuid()}:{os.getgid()}','/reclaim'],
-                   check=True,capture_output=True)
+    The service writes as its own unprivileged account and keeps what it writes
+    private: each /data/output/.recipes sidecar is 0600 under that uid, and so
+    are the thumbnails. A host whose user is a different uid therefore cannot
+    read or recreate the tree, and chowning it to the invoking user is not a way
+    out — that hands the tree to a uid the service is not, so /files reports
+    every recipe as missing and the restored container fails its own
+    verification. Archiving, restoring and finally releasing the tree from
+    inside a container keeps the ownership the service needs, which is also how
+    an operator backs up a bind mount."""
+    subprocess.run(['docker','run','--rm','--user','0','--network','none','--label',label,
+                    '-v',f'{root}:/work','-v',f'{logs}:/archive','--entrypoint',command[0],
+                    image_id,*command[1:]],check=True,capture_output=True)
 try:
     name=start(None,'named-volumes',named=True);check(name,'seed');stop(name)
     for volume in list(volumes):
@@ -133,18 +134,16 @@ try:
         for part in ('input','output','tmp','config'):(root/part).mkdir()
         name=start(root,'clean');check(name,'seed');stop(name)
         name=start(root,'restart');check(name,'verify');stop(name)
-        reclaim(root)   # the service wrote as its own uid; take the tree back before reading it
         backup=logs/'data-backup.tar.gz'
-        with tarfile.open(backup,'w:gz') as archive:
-            for part in ('input','output','tmp','config'):archive.add(root/part,arcname=part)
+        as_root(root,'tar','-czf','/archive/'+backup.name,'-C','/work','input','output','tmp','config')
         restored=root/'restored';restored.mkdir()
-        with tarfile.open(backup) as archive:archive.extractall(restored,filter='data')
+        as_root(root,'tar','-xzf','/archive/'+backup.name,'-C','/work/'+restored.name)
         # Recreate from the retained immutable image ID, as a rollback does.
         name=start(restored,'restored-immutable');check(name,'verify');stop(name)
         if rollback_id:
             name=start(restored,'rollback',selected_image=rollback_id);check(name,'verify');stop(name)
             print('Retained previous-image rollback passed: '+rollback_id,flush=True)
-        reclaim(root)   # again, so TemporaryDirectory can remove what the last run wrote
+        as_root(root,'chown','-R',f'{os.getuid()}:{os.getgid()}','/work')   # so TemporaryDirectory can remove it
         print('Clean start, restart, backup/restore, immutable-image recreation and graceful stops passed.',flush=True)
 finally:
     for name,process,output in list(active):
