@@ -1,14 +1,17 @@
 # Public / portable compose. Pulls the pre-built image from Docker Hub — no local
 # build needed — and keeps all runtime data in named volumes (no host-specific
 # paths, no source mount). For local development (live ./app reload + a local
-# build + custom host data dirs) use docker-compose.dev.yml instead (git-ignored).
+# build + custom host data dirs) use the committed docker-compose.dev.example.yml.
 services:
   magicflow:
-    image: aiulian25/magicflow:latest
+    image: ${MAGICFLOW_IMAGE:-aiulian25/magicflow:latest}
     pull_policy: always
     container_name: magicflow
     ports:
-      - "3876:3876"
+      # Loopback only: the app is unauthenticated, so by default it is reachable
+      # just from this machine. To serve it on your LAN, drop the 127.0.0.1
+      # prefix ("3876:3876") and put an authenticating reverse proxy in front.
+      - "127.0.0.1:3876:3876"
     volumes:
       - magicflow-input:/data/input
       - magicflow-output:/data/output
@@ -16,7 +19,23 @@ services:
       - magicflow-config:/data/config
     environment:
       - PYTHONUNBUFFERED=1
+      # Resource budgets, checked before a job decodes or buffers anything.
+      # These are the defaults — uncomment to change them. Bytes for the first
+      # and last, pixels for the middle two.
+      # - MAGICFLOW_MAX_TOTAL_UPLOAD_BYTES=1073741824   # 1 GiB per job, all files together
+      # - MAGICFLOW_MAX_IMAGE_DIMENSION=16000           # px on a side
+      # - MAGICFLOW_MAX_DECODED_PIXELS=2000000000       # total decoded pixels per job
+      # - MAGICFLOW_MIN_FREE_DISK_BYTES=1073741824      # refuse jobs below this free space
     restart: unless-stopped
+    # Backstops for the media tools themselves: ImageMagick honours its own
+    # policy limits, but ffmpeg and ghostscript do not, so the container caps
+    # what any of them can take. Memory is sized to sit above ImageMagick's
+    # 2 GiB working limit with room for the app and one encoder; raise it if
+    # you raise the budgets above. CPU is deliberately not capped — the app
+    # already runs a single worker and one job at a time, so capping it would
+    # only make conversions slower without bounding anything new.
+    mem_limit: 4g
+    pids_limit: 512
     security_opt:
       - no-new-privileges:true
 
