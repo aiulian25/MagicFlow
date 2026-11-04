@@ -33,3 +33,9 @@ Thumbs.db
 
 # ── Claude Code local settings ────────────────────────────────
 .claude/settings.local.json
+
+# Disposable development data
+.magicflow-dev/
+
+# Test logs and generated evidence
+/test-results/

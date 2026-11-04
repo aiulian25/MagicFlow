@@ -13,3 +13,15 @@ stitch_glassy_image_converter/
 *.md
 .env
 .env.*
+
+.magicflow-dev/
+build/node_modules/
+tests/
+
+# Local agent configuration and credentials are never build inputs
+.aws/
+.codex/
+.agents/
+.claude/
+
+test-results/

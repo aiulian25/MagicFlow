@@ -1,0 +1,6 @@
+{
+  "platform": "linux/amd64",
+  "node": "node:20-bookworm-slim@sha256:3d0f05455dea2c82e2f76e7e2543964c30f6b7d673fc1a83286736d44fe4c41c",
+  "python": "python:3.12-slim-bookworm@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337",
+  "debian_snapshot": "20261102T000000Z"
+}

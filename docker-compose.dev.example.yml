@@ -1,0 +1,23 @@
+# Standalone development example. Data stays in this project's .magicflow-dev/.
+services:
+  magicflow:
+    platform: linux/amd64
+    build:
+      context: .
+      args:
+        VERSION: dev
+        VCS_REF: working-tree
+    image: magicflow:dev
+    ports:
+      - "127.0.0.1:3876:3876"
+    volumes:
+      - ./app:/app:ro
+      - ./.magicflow-dev/input:/data/input
+      - ./.magicflow-dev/output:/data/output
+      - ./.magicflow-dev/tmp:/data/tmp
+      - ./.magicflow-dev/config:/data/config
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3876", "--workers", "1", "--reload", "--timeout-graceful-shutdown", "8"]
+    mem_limit: 4g
+    pids_limit: 512
+    security_opt:
+      - no-new-privileges:true

@@ -1,0 +1,9 @@
+{
+  "name": "magicflow-css",
+  "private": true,
+  "version": "0.0.0",
+  "devDependencies": {
+    "@tailwindcss/forms": "0.5.11",
+    "tailwindcss": "3.4.19"
+  }
+}

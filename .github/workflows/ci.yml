@@ -1,0 +1,106 @@
+name: Regression checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      fidelity:
+        description: Run the additional generated color/precision corpus
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: regression-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  ui:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22.23.2'
+      - name: Syntax, test-runner contracts and UI/browser behavior
+        run: |
+          mkdir -p test-results
+          node --version > test-results/node-version.txt
+          google-chrome --version > test-results/chrome-version.txt
+          python3 scripts/test.py syntax
+          python3 scripts/test.py ui
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: ui-logs
+          path: test-results/
+          retention-days: 7
+  media:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      MF_TEST_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}-media
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22.23.2'
+      - name: Build the locked final image (no source overlay)
+        run: |
+          mkdir -p test-results
+          MAGICFLOW_VERSION=ci MAGICFLOW_BUILD_IMAGE=magicflow:ci scripts/build-release.sh --network host > test-results/build.log 2>&1
+      - name: Prove failing-job cleanup and run offline media/API regressions
+        run: |
+          python3 scripts/test.py isolation --image magicflow:ci
+          python3 scripts/test.py media --image magicflow:ci
+      - name: Browser checks against the built HTML and CSS
+        run: |
+          docker run --rm --label "magicflow.test_run=$MF_TEST_RUN_ID" --network none --entrypoint cat magicflow:ci /app/static/index.html > test-results/built-index.html
+          docker run --rm --label "magicflow.test_run=$MF_TEST_RUN_ID" --network none --entrypoint cat magicflow:ci /app/static/vendor/tailwind.css > test-results/built-tailwind.css
+          cmp app/static/index.html test-results/built-index.html
+          MAGICFLOW_UI_SOURCE="$PWD/test-results/built-index.html" MAGICFLOW_CSS_SOURCE="$PWD/test-results/built-tailwind.css" python3 scripts/test.py ui --logs test-results/built-ui
+      - name: Final-container offline startup, shutdown and recovery
+        run: python3 scripts/verify-deployment.py --lifecycle-only magicflow:ci test-results/recovery > test-results/recovery.log 2>&1
+      - name: Always clean this job's labelled resources
+        if: always()
+        run: |
+          if [ -f scripts/test.py ]; then
+            python3 scripts/test.py cleanup
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: media-logs
+          path: test-results/
+          retention-days: 7
+  fidelity:
+    if: github.event_name == 'workflow_dispatch' && inputs.fidelity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      MF_TEST_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}-fidelity
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Build and run the explicit color/precision corpus
+        run: |
+          mkdir -p test-results
+          MAGICFLOW_VERSION=ci-fidelity MAGICFLOW_BUILD_IMAGE=magicflow:ci scripts/build-release.sh --network host > test-results/build.log 2>&1
+          python3 scripts/test.py fidelity --image magicflow:ci
+      - name: Always clean this job's labelled resources
+        if: always()
+        run: |
+          if [ -f scripts/test.py ]; then
+            python3 scripts/test.py cleanup
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: fidelity-logs
+          path: test-results/
+          retention-days: 7
